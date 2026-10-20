@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha256-4Lad8m4ZWW1Lgb9+sMVLYEfnIh7BjV1NQMEe79Pviks=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"etreamour.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.29.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文记录渗透测试基础原理和流程。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="渗透测试笔记1">
+<meta property="og:url" content="https://etreamour.github.io/2026/10/08/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E7%AC%94%E8%AE%B01/index.html">
+<meta property="og:site_name" content="欢迎访问我的博客">
+<meta property="og:description" content="本文记录渗透测试基础原理和流程。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-10-08T06:04:26.000Z">
+<meta property="article:modified_time" content="2026-10-19T01:16:37.563Z">
+<meta property="article:author" content="Xzt">
+<meta property="article:tag" content="web安全">
+<meta property="article:tag" content="渗透测试">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://etreamour.github.io/2026/10/08/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E7%AC%94%E8%AE%B01/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://etreamour.github.io/2026/10/08/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E7%AC%94%E8%AE%B01/","path":"2026/10/08/渗透测试笔记1/","title":"渗透测试笔记1"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>渗透测试笔记1 | 欢迎访问我的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-search popup-trigger" aria-label="搜索" role="button">
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">欢迎访问我的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习记录，分享知识</p>
+  </div>
+
+  <div class="site-nav-toggle" aria-label="切换导航栏" role="button">
+      <i class="fa fa-ellipsis fa-fw fa-lg"></i>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">9</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-layer-group fa-fw"></i>分类<span class="badge">6</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xzt</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://etreamour.github.io/2026/10/08/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E7%AC%94%E8%AE%B01/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xzt">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="欢迎访问我的博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="渗透测试笔记1 | 欢迎访问我的博客">
+      <meta itemprop="description" content="本文记录渗透测试基础原理和流程。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          渗透测试笔记1
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-10-08 14:04:26" itemprop="dateCreated datePublished" datetime="2026-10-08T14:04:26+08:00">2026-10-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-19 09:16:37" itemprop="dateModified" datetime="2026-10-19T09:16:37+08:00">2026-10-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">Web安全</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/%E6%BC%8F%E6%B4%9E%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">漏洞笔记</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">本文记录渗透测试基础原理和流程。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>渗透测试中得应用</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Python脚本 自动化信息收集、PoC脚本编写、漏洞批量验证、信息收集/漏洞利用</span><br><span class="line">PHP开发 理解web应用源码，分析漏洞代码、编写webshell、漏洞分析/后渗透</span><br><span class="line">网络基础 端口扫描、流量分析、网络拓扑理解、信息收集/网络渗透</span><br><span class="line">HTTP协议 请求构造、cookie/session分析、API测试、web漏洞挖掘</span><br><span class="line">SQL数据库 SQL注入理解、数据提取、权限分析、漏洞利用</span><br><span class="line">Shell脚本 日志分析、批量操作、应急响应脚本、后渗透/报告</span><br><span class="line">安全法规 合规边界判断、授权范围确认、报告合规性 前期准备/报告</span><br></pre></td></tr></table></figure>
+
+<p>渗透测试流程</p>
+<pre><code>信息收集-&gt;漏洞发掘-&gt;漏洞利用-&gt;RCE（非交互式shell）-&gt;反弹shell（交互式shell）-&gt;系统类信息收集-&gt;发掘提权-&gt;成功提权
+</code></pre>
+<p>渗透测试得定义</p>
+<pre><code>一种通过模拟恶意攻击者得技术手段和思维方式，对目标系统进行授权安全评估得方法
+</code></pre>
+<p>核心目的：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">发现安全漏洞-在攻击者之前找到系统漏洞；</span><br><span class="line">验证风险等级-证明漏洞得实际危害程度</span><br><span class="line">提高修复建议-帮助客户改善安全情况</span><br></pre></td></tr></table></figure>
+
+<p>渗透测试分类</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">黑盒测试（不知道内部架构）：测试人员不了解目标系统的内部信息；完全模拟外部攻击者的视角；</span><br><span class="line">    优点：最真实的模拟外部攻击场景</span><br><span class="line">    缺点：耗时长，可能遗漏深层漏洞</span><br><span class="line">    适用场景：评估外部攻击面；合规性测试</span><br><span class="line">白盒测试：测试人员完全了解目标系统（源代码、架构文档、网络拓扑、账户密码），可有进行代码审计级别的深入分析</span><br><span class="line">    优点：覆盖率最高，能发现深层漏洞</span><br><span class="line">    缺点：不真实，依赖文档准确性</span><br><span class="line">    适用场景：内部安全审计、SDL安全评估</span><br><span class="line">灰盒测试：测试人员了解部分信息（如普通用户账户、部分架构信息），平衡真实性和效率</span><br><span class="line">优点：效率高于黑盒，覆盖优于纯黑盒</span><br><span class="line">缺点：信息边界需要明确约定</span><br><span class="line">适用场景：大多数实际渗透测试项目</span><br></pre></td></tr></table></figure>
+
+<p>合法性和授权边界</p>
+<pre><code>渗透测试合法前提是获得明确的书面授权，这是法律硬性要求
+</code></pre>
+<p>授权书关键要素</p>
+<pre><code>渗透测试授权书-必须在测试开始前签署，双方盖章确认法律效力
+测试范围-明确哪些IP、域名、系统在测试范围内，使用白名单方式列出
+测试时间-约定测试窗口期(如工作日9:00-18:00)，避免影响业务高峰
+禁止行为-明确不允许的操作(如DoS、数据删除、社工攻击、物理入侵等)
+应急联系人-出现问题时的紧急联络方式(7x24小时联系电话)
+数据处理-测试过程中获取的敏感数据如何处理和销毁(测试结束后N天内彻底删除)
+保密协议-测试发现的漏洞和获取的信息不得向第三方泄露
+免责条款-约定在授权范围内的操作造成的合理影响，测试方不承担赔偿责任
+先授权，在测试
+</code></pre>
+<p>PTES-渗透测试执行标准</p>
+<p>阶段一：前期交互</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">目标：与客户建立共识，明确测试范围、规则和期望</span><br><span class="line">核心产出物：</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>渗透测试授权书</td>
+<td>法律授权、责任划分</td>
+</tr>
+<tr>
+<td>测试范围文档</td>
+<td>目标IP&#x2F;域名&#x2F;系统清单、排除项</td>
+</tr>
+<tr>
+<td>规则约定</td>
+<td>测试时间窗口、禁止行为、告警处理流程</td>
+</tr>
+<tr>
+<td>应急预案</td>
+<td>紧急联系人、回滚方案</td>
+</tr>
+<tr>
+<td>项目计划</td>
+<td>时间表、人员分工、交付物列表</td>
+</tr>
+</tbody></table>
+<pre><code>关键沟通要点：
+    测试类型确认：黑/灰/白
+    目标优先级：哪些系统是重点
+    风险容忍度：客户能接受的测试强度
+    成功标准：什么情况算测试完成
+</code></pre>
+<p>阶段二：信息收集</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">目标：尽可能多收集目标信息，为后续漏洞发现奠定基础</span><br><span class="line">被动信息收集--不直接与目标交互</span><br><span class="line">主动信息收集--直接与目标系统交互</span><br><span class="line">信息收集的层次模型</span><br><span class="line">    第一层：外围信息：域名、IP、组织信息、技术栈</span><br><span class="line">    第二层：网络层信息（主动扫描）：端口、服务、操作系统</span><br><span class="line">    第三层：应用层信息（web探测）：子域名、目录、CMS、API</span><br><span class="line">    第四层：深度信息（漏洞扫描+手动探测）：漏洞列表、配置弱点、业务入口</span><br></pre></td></tr></table></figure>
+
+<p>阶段三：威胁建模</p>
+<pre><code>目标：基于收集到的信息，分析目标的攻击面和潜在攻击路径
+核心活动：
+    资产识别--梳理目标暴露的所有资产（web应用、API、邮件系统、vpn等）
+    攻击面分析--识别每个资产的潜在攻击入口
+    威胁识别：根据资产类型和技术栈推断可能存在的漏洞
+    攻击路径规划--设计从外部到核心数据的攻击路劲
+    优先级排序--根据资产价值和攻击可行性确定测试优先级
+在线靶场（挂VPN）：https://portswigger.net/、
+STRIDE威胁分类模型
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>威胁类型</th>
+<th>含义</th>
+<th>Web应用示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>仿冒</td>
+<td>伪装成其他用户或系统</td>
+<td>Cookie伪装，session劫持，IP欺骗</td>
+</tr>
+<tr>
+<td>篡改</td>
+<td>未授权修改数据</td>
+<td>参数篡改，sql注入修改数据，中间人攻击</td>
+</tr>
+<tr>
+<td>抵赖</td>
+<td>否认执行某操作</td>
+<td>日志缺失，审计绕过</td>
+</tr>
+<tr>
+<td>信息泄露</td>
+<td>未授权获取信息</td>
+<td>目录遍历，错误信息泄露，源码泄露</td>
+</tr>
+<tr>
+<td>拒绝服务</td>
+<td>使系统不可用</td>
+<td>资源耗尽，应用层DOS，逻辑锁定</td>
+</tr>
+<tr>
+<td>权限提升</td>
+<td>获取更高权限</td>
+<td>越权访问，提权漏洞，认证绕过</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">攻击面优先级评估矩阵</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>优先级</th>
+<th>特征</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P0</td>
+<td>直接暴露在互联网+处理敏感数据+技术栈老旧</td>
+<td>老版本的PHP支付系统</td>
+</tr>
+<tr>
+<td>P1</td>
+<td>互联网可达+有用户交互+已知组件</td>
+<td>WordPress网站，Sping boot API</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>需要认证才能访问+内部系统</td>
+<td>OA系统，内部管理后台</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>仅内网可达+无敏感数据</td>
+<td>内部文档系统，监控面板</td>
+</tr>
+</tbody></table>
+<p>阶段四：漏洞分析</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">目标：系统的识别和验证目标中存在的安全漏洞</span><br><span class="line">漏洞发现方法：</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>说明</th>
+<th>工具示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>自动化扫描</td>
+<td>使用扫描器批量检测已知漏洞</td>
+<td>Nessus、AWVS、Nuclei</td>
+</tr>
+<tr>
+<td>手动测试</td>
+<td>针对业务逻辑和复杂场景进行人工测试</td>
+<td>Burp suite、浏览器</td>
+</tr>
+<tr>
+<td>代码审计</td>
+<td>审查代码中的安全缺陷（白盒）</td>
+<td>Semgrep、codeQL</td>
+</tr>
+<tr>
+<td>配置审查</td>
+<td>检查系统和服务的安全配置</td>
+<td>CIS Benchmark</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">漏洞分类（TOP10）</span><br><span class="line"></span><br><span class="line">A01：2021--失效的访问控制-越权、IDOR</span><br><span class="line"></span><br><span class="line">A02：2021--加密机制失效-明文传输、弱加密</span><br><span class="line"></span><br><span class="line">A03：2021--注入-sql注入、XSS、命令注入</span><br><span class="line"></span><br><span class="line">A04：2021--不安全的设计-业务逻辑缺陷</span><br><span class="line"></span><br><span class="line">A05：2021--安全配置错误-默认配置、信息泄露</span><br><span class="line"></span><br><span class="line">A06：2021--自带缺陷和过时的组件-已知CVE</span><br><span class="line"></span><br><span class="line">A07：2021--身份识别和认证失败-弱口令、认证绕过</span><br><span class="line"></span><br><span class="line">A08：2021--软件和数据完整性故障-反序列化、CI/CD</span><br><span class="line"></span><br><span class="line">A09：2021--安全日志和监控失败-无审计日志</span><br><span class="line"></span><br><span class="line">A010：2021--服务端请求伪造（SSRF）-内网探测</span><br></pre></td></tr></table></figure>
+
+<p>阶段五：漏洞利用</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">目标：实际利用发现的漏洞，证明其危害性和可利用性</span><br><span class="line">关键原则</span><br><span class="line">	最小影响原则--利用漏洞尽量减少对目标系统的影响，不删数据，不中断服务</span><br><span class="line">	证据充分原则--获取足够的截图和日志证明漏洞存在，每一步截图记录</span><br><span class="line">	可控性原则--确保利用过程可控，优先使用读取操作而非写入操作验证漏洞</span><br><span class="line">	记录完整原则--详细记录每一步操作（时间、命令、响应）、便于复现和报告攥写</span><br><span class="line">	及时沟通原则--发现高危漏洞（RCE、数据库完全泄露）通知客户</span><br></pre></td></tr></table></figure>
+
+<p>阶段六：后渗透</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">目标：在获取初始访问权限后，评估可能造成的最大影响</span><br><span class="line">后渗透（在授权的范围内）</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>活动</th>
+<th>具体操作</th>
+<th>目的</th>
+<th>注意事项</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>权限提升</td>
+<td>本地提权漏洞利用、SUID、CRON、能力、SUDO滥用、内核漏洞</td>
+<td>从普通用户提升到root</td>
+<td>记录提权路劲、评估防御差距</td>
+</tr>
+<tr>
+<td>内网信息收集</td>
+<td>ARP扫描、内网端口扫、服务探测</td>
+<td>发现内网其他可达的系统和服务</td>
+<td>注意扫描速度</td>
+</tr>
+<tr>
+<td>凭据收集</td>
+<td>读取配置文件、内存提权密码</td>
+<td>获取可用于横向移动的凭据</td>
+<td>记录凭据来源、测试后建议修改</td>
+</tr>
+<tr>
+<td>横向移动</td>
+<td>PASS-the-Hash、黄金票据、白银票据</td>
+<td>利用获取的凭据访问其他系统服务</td>
+<td>每一步都要在授权范围内</td>
+</tr>
+<tr>
+<td>持久化</td>
+<td>密钥、定时任务、system</td>
+<td>评估攻击者维持访问可能方式</td>
+<td>仅评估可行性，不实际植入后面</td>
+</tr>
+<tr>
+<td>数据访问评估</td>
+<td>列出可访问的数据库、文件共享、敏感文件</td>
+<td>证明可以访问哪些敏感数据</td>
+<td>不下载实际敏感数据、截图证明即可</td>
+</tr>
+</tbody></table>
+<p>阶段七：报告攥写</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">目标：将整个测试过程和发现整理成专业的渗透测试报告</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>章节</th>
+<th>内容</th>
+<th>谁看</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>执行摘要</td>
+<td>测试范围、关键发现、风险等级概览</td>
+<td>管理层</td>
+</tr>
+<tr>
+<td>测试方法</td>
+<td>使用的标准、工具、测试时间</td>
+<td>技术团队</td>
+</tr>
+<tr>
+<td>漏洞详情</td>
+<td>每个漏洞的描述、复现步骤、影响分析</td>
+<td>技术团队</td>
+</tr>
+<tr>
+<td>风险评级</td>
+<td>CVSS评分、业务影响评估</td>
+<td>管理层+技术</td>
+</tr>
+<tr>
+<td>修复建议</td>
+<td>针对每个漏洞的具体方案</td>
+<td>开发团队</td>
+</tr>
+<tr>
+<td>修复路线图</td>
+<td>按优先级排序的修复计划</td>
+<td>管理层</td>
+</tr>
+<tr>
+<td>附录</td>
+<td>原始扫描结果、详细日志</td>
+<td>技术团队</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">OWASP测试指南，12个测试类别</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>类别</th>
+<th>测试项数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>WSTG-INFO</td>
+<td>信息收集</td>
+<td>10</td>
+</tr>
+<tr>
+<td>WSTG-CONF</td>
+<td>配置与部署管理测试</td>
+<td>11</td>
+</tr>
+<tr>
+<td>WSTG-IDNT</td>
+<td>身份管理测试</td>
+<td>5</td>
+</tr>
+<tr>
+<td>WSTG-ATHN</td>
+<td>认证测试</td>
+<td>10</td>
+</tr>
+<tr>
+<td>WSTG-ATHZ</td>
+<td>授权测试</td>
+<td>4</td>
+</tr>
+<tr>
+<td>WSTG-SESS</td>
+<td>会话管理测试</td>
+<td>9</td>
+</tr>
+<tr>
+<td>WSTG-INPV</td>
+<td>输入验证测试</td>
+<td>19</td>
+</tr>
+<tr>
+<td>WSTG-ERRH</td>
+<td>错误处理测试</td>
+<td>2</td>
+</tr>
+<tr>
+<td>WSTG-CRYP</td>
+<td>加密测试</td>
+<td>4</td>
+</tr>
+<tr>
+<td>WSTG-BUSL</td>
+<td>业务逻辑测试</td>
+<td>9</td>
+</tr>
+<tr>
+<td>WSTG-CLNT</td>
+<td>客户端测试</td>
+<td>13</td>
+</tr>
+<tr>
+<td>WSTG-APIT</td>
+<td>API 测试</td>
+<td>1</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">被动信息收集：</span><br><span class="line">	核心原则：不与目标系统直接交互，所获取的所有信息都来自公开渠道，目标不会受到任何来自攻击者的请求或告警</span><br><span class="line">WHOIS查询</span><br><span class="line">	查询域名网站：https://whois.chinaz.com/</span><br><span class="line">DNS信息收集</span><br><span class="line">	常用查询工具：dig、nslookup、host、dnsenum</span><br><span class="line">	常见DNS记录类型</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>记录类型</th>
+<th>用途</th>
+<th>安全价值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A</td>
+<td>域名-&gt;IPv4地址</td>
+<td>获取目标真实IP</td>
+</tr>
+<tr>
+<td>AAAA</td>
+<td>域名-&gt;IPv6地址</td>
+<td>发现IPv6资产</td>
+</tr>
+<tr>
+<td>MX</td>
+<td>邮件服务器</td>
+<td>邮件系统信息、可能的内部域名</td>
+</tr>
+<tr>
+<td>TXT</td>
+<td>SPF&#x2F;DKIM&#x2F;DMARC等</td>
+<td>发现内部IP段、第三方服务</td>
+</tr>
+<tr>
+<td>NS</td>
+<td>DNS服务器</td>
+<td>DNS基础设施信息</td>
+</tr>
+<tr>
+<td>CHANME</td>
+<td>别名记录</td>
+<td>发现CDN或第三方服务托管</td>
+</tr>
+<tr>
+<td>SOA</td>
+<td>起始授权</td>
+<td>DNS管理员邮箱</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">主动信息收集</span><br><span class="line">	直接与目标系统交互（发送数据包或者请求），因此目标理论上可以检测到攻击者的行为</span><br><span class="line">主动收集的方法</span><br><span class="line">	端口扫描</span><br><span class="line">	服务识别</span><br><span class="line">	漏洞扫描</span><br><span class="line">	Web爬虫</span><br><span class="line">端口扫描原理</span><br><span class="line">	TCP SYN扫描（半开放扫描）</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>端口状态</th>
+<th>交互过程</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>端口开放</td>
+<td>攻击者-&gt;SYN-&gt;目标攻击者&lt;-SYN&#x2F;ACK&lt;-目标攻击者-&gt;RST-&gt;目标</td>
+<td>不完全握手</td>
+</tr>
+<tr>
+<td>端口关闭</td>
+<td>攻击者-&gt;SYN-&gt;目标攻击者&lt;-RST&lt;-目标</td>
+<td>目标直接拒绝</td>
+</tr>
+<tr>
+<td>端口被过滤</td>
+<td>攻击者-&gt;SYN-&gt;目标（无响应或ICMP不可达）</td>
+<td>被防火墙拦截</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">TCP Connect扫描（完整连接）：</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>交互过程</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>攻击者-&gt;SYN-&gt;目标</td>
+<td>发起连接</td>
+</tr>
+<tr>
+<td>2</td>
+<td>攻击者&lt;-SYN&#x2F;ACK&lt;-目标</td>
+<td>目标响应</td>
+</tr>
+<tr>
+<td>3</td>
+<td>攻击者-&gt;SYN&#x2F;ACK-&gt;目标</td>
+<td>完成握手</td>
+</tr>
+<tr>
+<td>4</td>
+<td>攻击者-&gt;RST-&gt;目标</td>
+<td>断开连接</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Nmap扫描模式</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>扫描类型</th>
+<th>参数</th>
+<th>原理</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TCP SYN扫描</td>
+<td>-sS</td>
+<td>发送SYN，手段收到SYN-ACK表示开放</td>
+<td>默认扫描、速度快，不完全三次握手</td>
+</tr>
+<tr>
+<td>TCP Connect扫描</td>
+<td>-sT</td>
+<td>完整三次握手</td>
+<td>无需root权限、但速度慢且留下日志</td>
+</tr>
+<tr>
+<td>UDP扫描</td>
+<td>-sU</td>
+<td>发送UDP包，根据ICMP响应判断</td>
+<td>速度很慢，但可能发现DNS&#x2F;SNMP等服务</td>
+</tr>
+<tr>
+<td>TCP ACK扫描</td>
+<td>-sA</td>
+<td>发送ACK包</td>
+<td>用于检测防火墙的规则，不判断端口状态</td>
+</tr>
+<tr>
+<td>NULL&#x2F;FIN&#x2F;Xmas扫描</td>
+<td>-sN&#x2F;-sF&#x2F;-sX</td>
+<td>发送特殊标志位组合</td>
+<td>用于绕过某些防火墙</td>
+</tr>
+<tr>
+<td>Ping扫描</td>
+<td>-sn</td>
+<td>仅主机发现，不扫描端口</td>
+<td>快速发现活跃主机</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">时间模板</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>模板参数</th>
+<th>特点与适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>-T0</td>
+<td>极慢。包之间间隔几分钟，极度隐蔽，规避老旧IDS告警</td>
+</tr>
+<tr>
+<td>-T1</td>
+<td>极慢。包间隔数秒，用于规避部分检测设备</td>
+</tr>
+<tr>
+<td>-T2</td>
+<td>降速以降低网络负载，避免目标服务器被突发请求压垮</td>
+</tr>
+<tr>
+<td>-T3</td>
+<td>默认，模拟普通网络行为</td>
+</tr>
+<tr>
+<td>-T4</td>
+<td>假设处于高速、可高的现代网络（局域网、稳定的宽带），大幅度缩短探测等待时间并增加并发，扫描速度加快</td>
+</tr>
+<tr>
+<td>-T5</td>
+<td>极快、极激情，极易丢包造成漏扫，且极易触发告警或压垮脆弱的网络设备</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">Nmap NSE 脚本常用命令</span><br><span class="line"># 1. 默认安全脚本集合（等同于 -sC）</span><br><span class="line">nmap -sC target.com</span><br><span class="line"></span><br><span class="line"># 2. 按分类批量加载</span><br><span class="line">nmap --script=vuln target.com      # 扫常见已知漏洞</span><br><span class="line">nmap --script=auth target.com      # 检查认证、弱配置、匿名登录</span><br><span class="line">nmap --script=brute target.com     # 常见服务暴力破解</span><br><span class="line"></span><br><span class="line"># 3. 高频服务探测脚本</span><br><span class="line">nmap --script=http-title target.com            # 获取 Web 首页标题</span><br><span class="line">nmap --script=smb-enum-shares target.com       # 枚举 SMB 共享目录与权限</span><br><span class="line">nmap --script=ftp-anon target.com              # 检查 FTP 匿名访问</span><br><span class="line">nmap --script=mysql-empty-password target.com  # 检查 MySQL 空密码</span><br><span class="line">nmap --script=redis-info target.com            # 探测 Redis 未授权/基本信息</span><br><span class="line">nmap --script=smtp-enum-users target.com       # 枚举 SMTP 用户</span><br><span class="line"></span><br><span class="line"># 4. 通配符模糊匹配</span><br><span class="line">nmap --script=&quot;http-*&quot; target.com              # 加载所有 http- 开头的脚本</span><br><span class="line"></span><br><span class="line">常用参数说明：</span><br><span class="line">-sC：加载默认安全脚本集（等同于--script=default）。</span><br><span class="line">-sV：版本端口</span><br><span class="line">--script=&lt;类别/名称&gt;：加载指定分类（如vuln漏洞、auth认证、brute爆破）或具体的单个脚本文件。</span><br><span class="line">--script=&quot;&lt;通配符&gt;&quot;：支持*模糊匹配，例如&quot;http-*&quot;会调用所有以http-*开头的探测脚本。</span><br><span class="line"></span><br><span class="line">基础安全扫描</span><br><span class="line"># 快速探测 Web 常见配置缺陷、过期组件和敏感文件</span><br><span class="line">nikto -h http://&lt;目标_IP&gt;</span><br><span class="line"></span><br><span class="line">参数说明：</span><br><span class="line">-h：指定目标的主机名、IP或完整URL（Host）。</span><br><span class="line"></span><br><span class="line">目录与敏感路径爆破</span><br><span class="line"># 1. dirsearch（轻量灵活，快速指定后缀和状态码过滤）</span><br><span class="line">dirsearch -u http://&lt;目标_IP&gt; -e php,html,txt -x 403,404</span><br><span class="line"></span><br><span class="line"># 2. gobuster（Go 编写高并发，适合挂大字典跑海量路径）</span><br><span class="line">gobuster dir -u http://&lt;目标_IP&gt; -w /usr/share/wordlists/dirb/big.txt -x json,txt,conf,js,bak,html -t 50</span><br><span class="line"></span><br><span class="line"># 3. ffuf（Fuzz，灵活定制字典占位符与过滤条件）</span><br><span class="line">ffuf -w &lt;字典路径&gt; -u http://&lt;目标_IP&gt;/FUZZ -mc 200,301,302</span><br><span class="line"></span><br><span class="line">常用参数说明：</span><br><span class="line">dirsearch：</span><br><span class="line">-u：目标URL。</span><br><span class="line">-e：指定扫描的文件扩展名后缀列表（Extensions，如php,html,txt）。</span><br><span class="line">-x：排除不需要展示的HTTP状态码（Exclude codes，过滤无关结果）。</span><br><span class="line">gobuster：</span><br><span class="line">dir：指定模式为目录/文件枚举。</span><br><span class="line">-u：目标URL。</span><br><span class="line">-w：指定使用的字典文件路径（Wordlist）。</span><br><span class="line">-x：自动为字典词条追加的文件后缀列表（如txt,bak,html）。</span><br><span class="line">-t：并发线程数（Threads，默认10，加大线程可提升扫描速率）。</span><br><span class="line">ffuf：</span><br><span class="line">-w：指定字典文件路径。</span><br><span class="line">-u：目标URL，URL 中的FUZZ是关键词占位符（字典内容会被替换注入到该位置）。</span><br><span class="line">-mc：仅匹配并显示符合指定状态码的结果（Match Codes，如200,301,302）。</span><br><span class="line"></span><br><span class="line">指纹识别</span><br><span class="line">Web指纹识别用于确定目标使用的技术栈（web服务器、编程语言、框架）</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>类型</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>wappalyzer</td>
+<td>浏览器拓展</td>
+<td>自动识别，界面直观</td>
+</tr>
+<tr>
+<td>whatweb</td>
+<td>命令行</td>
+<td>深度识别，支持批量</td>
+</tr>
+<tr>
+<td>httpx</td>
+<td>命令行</td>
+<td>高速，支持多种探测</td>
+</tr>
+<tr>
+<td>Finger</td>
+<td>在线平台</td>
+<td>过程CMS识别能力强</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># 1. WhatWeb 基本用法</span><br><span class="line">whatweb http://10.10.1.184</span><br><span class="line"></span><br><span class="line"># 2. 详细输出与更深入探测</span><br><span class="line">whatweb -v -a 3 http://10.10.1.184</span><br><span class="line"></span><br><span class="line">参数说明：</span><br><span class="line">	-v：详细输出模式（Verbose），展开显示每个插件的命中规则与版本依据。</span><br><span class="line">	-a：侵略性等级（Aggression level，1为隐蔽被动抓取，3为主动深度发包探测）。</span><br></pre></td></tr></table></figure>
+
+<p>数据流全生命周期分析模型</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line">核心：在应用安全领域，所有输入验证类漏洞的本质，都是“不可信的外部输入，在未充分校验与净化情况下，直接拼接进入高权限执行上下文中”</span><br><span class="line"></span><br><span class="line">浏览器用户输入-&gt;前端JS拦截-&gt;HTTP网络报文-&gt;后端语言接收-&gt;安全规则过滤-&gt;磁盘文件落盘-&gt;web中间件解析执行</span><br><span class="line"></span><br><span class="line">简历文件上传，作业上传功能</span><br><span class="line">第一步：客户端前端校验</span><br><span class="line">业务逻辑：网页表单通过绑定的js函数检查文件扩展名</span><br><span class="line">安全脆弱点：前端代码完全运行在用户本地浏览器，控制权属于客户端</span><br><span class="line">绕过方式：先选取合规文件绕过表单校验，在报文发出的瞬间通过将文件名改成脚本拓展名</span><br><span class="line"></span><br><span class="line">第二步：HTTP协议传输</span><br><span class="line">业务逻辑：请求报文由content-Type标头表示当前发送的文件类型</span><br><span class="line">安全脆弱点：HTTP标头由发包的客户端生成</span><br><span class="line">绕过方式：上传脚本文件的同时，用BP抓包，将Content-Type手动改写合法后缀名</span><br><span class="line"></span><br><span class="line">第三步：后端黑名单过滤</span><br><span class="line">业务逻辑：后端代码采用黑名单拦截机制拦截特定危险后缀（php，phtml，php5）</span><br><span class="line">安全脆弱点：中间件支持解析的拓展名种类以及底层操作系统特性往往超出黑名单覆盖范围</span><br><span class="line">绕过方式：</span><br><span class="line">1.替代拓展名：上传.phtml、.php5或大小写混写的拓展名，中间件依旧按可执行脚本解析</span><br><span class="line">2.操作系统特性：Windows自动去除文件末尾空格与点号，上传shell.php在上传成功后被系统还原成shell.php</span><br><span class="line">3.空字符阶段：旧版本环境，底层c语言遇到空字符提前终止，shell.php%00.jpg在保存时截断为脚本文件.php</span><br><span class="line"></span><br><span class="line">第四步：文件持久化存储</span><br><span class="line">业务逻辑：服务器通过文件操作将临时文件转存至公开目录并保留原始文件名（var/www/html/uploads/shell.php）</span><br><span class="line">安全脆弱点：保留原文件名易被利用进行路径穿越覆盖系统文件（../../../../../），存放在公开的Web目录下使外部可以通过UR;直接请求该文件</span><br><span class="line"></span><br><span class="line">第五步：Web中间件解析路由</span><br><span class="line">业务逻辑：用户访问已上传文件，中间件根据配置决定处理方式</span><br><span class="line">安全脆弱点：中间配置缺陷会导致非脚本文件被调用解析器执行</span><br><span class="line">典型缺陷：当请求不存在脚本路径，服务器向前回溯并把前序图片内容交由脚本解析器处理，导致图片中的恶意代码被触发执行</span><br><span class="line"></span><br><span class="line">检索接口：数据与指令混淆</span><br><span class="line">案例一：SQL注入</span><br><span class="line">收银系统有一张固定模板：顾客’___’点单，应付15元</span><br><span class="line">正常人报名字：打出来小票就是顾客’张三’点单，应付15元 ‘张三’</span><br><span class="line">攻击者报名字：张三’，全程金额修改为0，另外’ ‘张三’，全程金额修改为0，另外’’</span><br><span class="line"></span><br><span class="line">案例二：反射性XSS</span><br><span class="line">正常显示流程：在评论区发言，系统在最新评论区输出：最新发言人：张三</span><br><span class="line">恶意攻击把昵称改成带有浏览器可以执行代码句子：张三&lt;script&gt;窃取当前用户的cookie发给kali&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<p>渗透测试的三个维度</p>
+<table>
+<thead>
+<tr>
+<th>攻击面维度</th>
+<th>核心业务入口</th>
+<th>常见脆弱性与关注点</th>
+<th>实探测手法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>维度一：认证前暴露面（未授权）</td>
+<td>用户登录与密码重置，公开API接口，监控端点</td>
+<td>用户名枚举响应延迟，验证码防爆破机制的缺失，公开接口文档</td>
+<td>Burp intruder目录字典扫描</td>
+</tr>
+<tr>
+<td>维度二：认证后特权面（常规用户越权）</td>
+<td>对象信息读取，文件导入导出，业务流程审批</td>
+<td>水平越权（篡改参数查看他人数据）Excel导入外部实体注入（XXE）、PDF导出服务端请求伪造（SSRF）</td>
+<td>越权审计工具，构造XML模板</td>
+</tr>
+<tr>
+<td>维度三：底层基础设置</td>
+<td>源码版本控制残留，中间管理端点，未授权网络服务，历史版本遗留问题</td>
+<td>公开的.git目录导致源码泄露、redis（6379）等服务端口无密码暴露在公网，已知框架历史漏洞</td>
+<td>源码还原工具Nmap指纹识别，web指纹识别</td>
+</tr>
+</tbody></table>
+<p>CVSS 3.1漏洞量化评估体系</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">CVSS:3.1 / AV:[N/A/L/P] / AC:[L/H] / PR:[N/L/H] / UI:[N/R] / S:[U/C] / C:[N/L/H] / I:[N/L/H] / A:[N/L/H]</span><br><span class="line">攻击向量（AV）</span><br><span class="line">Network（N）-网络：漏洞可通过互联网或跨网段远程利用，无网络拓扑限制（Web漏洞）</span><br><span class="line">Adjacent（A）-相邻网络：必须处于同一物理网段或局域网广播域内（ARP欺骗、蓝牙攻击、内网DHCP投毒）</span><br><span class="line">Loacl（L）-本地：攻击者必须已拥有本地操作系统的交互式shell或控制台访问权限（本地内核提权漏洞）</span><br><span class="line">Physical（P）-物理接触：必须接触物理件设备（恶意插拔USB）</span><br><span class="line">攻击复杂度（AC）</span><br><span class="line">Low（L）-低：攻击条件常规确定，没有不可控的先决依赖。攻击者发包即可稳定触发</span><br><span class="line">Hight（H）-高：攻击能否成功取决于攻击者无法直接控制复杂环境条件</span><br><span class="line">所需权限（PR）</span><br><span class="line">None（N）-无：攻击者在未经任何身份认证的匿名状态下即可实施攻击</span><br><span class="line">Low（L）-低权限：攻击者必须具备常规用户凭证</span><br><span class="line">Hight（H）-高权限：攻击者已具备管理员权限</span><br><span class="line">用户交互（UI）</span><br><span class="line">None（N）-无：系统直接响应攻击者的恶意流量，不需要第三方用户做任何配合</span><br><span class="line">Required（R）需要交互：需要目标系统其他用户执行交互操作</span><br><span class="line">影响范围（S）</span><br><span class="line">Unchanged（U）-未改变：受漏洞影响的安全受害者，与脆弱组件属于同一个安全管理域/授权上下文（SQL注入）</span><br><span class="line">Changed（C）-已改变：漏洞利用能够越界击穿安全边界，影响另一个独立的安全上下文组件</span><br><span class="line">XSS漏洞。脆弱组件web服务器，单脚本在受害者的浏览器中执行，窃取受害者的cookie或控制浏览器行为</span><br><span class="line">SSRF。外部请求直接击穿外网与内网安全边界，直接访问内网元数据服务</span><br><span class="line">影响性指标：机密性C，完整性I，可用性A</span><br><span class="line">None（N）：无任何影响</span><br><span class="line">Low（L）：受到部分限制的影响（如泄露了部分非核心数据字段、篡改了个别非关键配置、造成短暂局部性能波动但业务未中断）</span><br><span class="line">Hight（H）：受到毁灭性彻底影响（所有数据被全量脱库/机密性清零；攻击者拥有任意写权限/可篡改全部账目与代码；系统完全死锁宕机/服务彻底拒绝响应）</span><br><span class="line">CVSS网站：https://www.first.org/cvss/calculator/3.1</span><br><span class="line">未认证的文件上传拿SHELL</span><br><span class="line">CVSS:3.1 / AV:N / AC:L / PR:N / UI:N / S:U / C:H / I:H / A:H</span><br><span class="line"></span><br><span class="line">举例：</span><br><span class="line">需普通账号权限（PR:L）；需等待管理员点击查看（UI:R）；跨越服务端边界在管理员浏览器执行（S:C）；仅能窃取前台凭证无法中断服务（C:L/I:L/A:N）</span><br><span class="line">需普通账号权限（PR:L）；需等待管理员点击查看（UI:R）；跨越服务端边界在管理员浏览器执行（S:C）；仅能窃取前台凭证无法中断服务（C:L/I:L/A:N）</span><br><span class="line">5.4</span><br><span class="line">CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:N</span><br><span class="line"></span><br><span class="line">未授权任意文件下载（路径穿越）</span><br><span class="line">远程可利用（AV:N）；无需登录（PR:N）；无交互（UI:N）；仅读取服务器本地文件（S:U）；可下载配置与源码（C:H）；只读无写权限且不影响可用性（I:N/A:N）</span><br><span class="line">7.5</span><br><span class="line">CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N</span><br><span class="line"></span><br><span class="line">专业级渗透测试报告与分层防御落地</span><br><span class="line">规范级专业报告示例</span><br><span class="line">漏洞标题：商品检索接口基于联合查询的 SQL 注入漏洞</span><br><span class="line">漏洞类型：CWE-89 (SQL Command Injection)</span><br><span class="line">风险定级：严重 (Critical) | CVSS 3.1: 9.8</span><br><span class="line">涉及资产：POST https://shop.target.com/api/v2/search</span><br><span class="line">风险参数：POST 请求体中的 keyword 参数</span><br><span class="line">复现步骤：构造验证载荷 keyword=&#x27; UNION SELECT 1,user(),5--+，服务端返回 200 并回显高权用户 root@localhost。</span><br><span class="line">整改方案：PreparedStatement 预编译 + 账号降权 + WAF 规则阻断。</span><br></pre></td></tr></table></figure>
+
+<p>三层纵深防御体系</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">第一道防线：应用代码层</span><br><span class="line"></span><br><span class="line">预编译参数绑定：SQL 语句强制采用参数化预编译机制，从原理上消除指令混淆。</span><br><span class="line"></span><br><span class="line">严格白名单机制：文件上传功能仅放行业务必要的格式（如 .png, .pdf），禁止使用黑名单。</span><br><span class="line"></span><br><span class="line">随机化重命名：服务端接收文件后统一使用系统生成的 UUID 重构文件名，避免目录穿越攻击。</span><br><span class="line"></span><br><span class="line">图像二次重绘转码：使用图像处理库对图片重新渲染转码，破坏隐藏在 EXIF 元数据中的恶意代码。</span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line">第二道防线：中间件与配置层</span><br><span class="line"></span><br><span class="line">静态存储目录禁用脚本执行：在 Web 容器中限制上传目录的脚本解析能力：</span><br><span class="line"></span><br><span class="line">\# Nginx 上传目录禁止执行脚本配置示例</span><br><span class="line"></span><br><span class="line">location ~* ^/(uploads|attachments)/.*\.(php|phtml|jsp|asp)$ &#123;</span><br><span class="line"></span><br><span class="line">  deny all;</span><br><span class="line"></span><br><span class="line">  return 403;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">动静分离架构：将静态文件转存至独立的对象存储（如 OSS/S3），挂载无脚本解析环境的独立二级域名，实现存储与执行的物理隔离。</span><br><span class="line"></span><br><span class="line">WAF 流量过滤：在反向代理侧部署 WAF 规则，对常见的注入载荷与木马特征进行第七层流量阻断。</span><br><span class="line"></span><br><span class="line">第三道防线：系统与网络权限层</span><br><span class="line"></span><br><span class="line">服务进程最小权限运行：Web 容器以专用非特权系统账户（如 www-data）运行，禁止直接以 root 或 Administrator 启动服务。</span><br><span class="line"></span><br><span class="line">挂载参数加固：在操作系统 /etc/fstab 中，将文件上传目录所在分区配置为 noexec, nosuid, nodev，从系统底层限制文件执行能力。</span><br><span class="line"></span><br><span class="line">出站网络连接控制（Egress Filtering）：防火墙对服务器主动发起的外部网络连接实施严格控制，阻断非必要端口出网，破坏反向 Shell 的通信链路。</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/web%E5%AE%89%E5%85%A8/" rel="tag"># web安全</a>
+              <a href="/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/" rel="tag"># 渗透测试</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/" rel="prev" title="Cisco综合实验">
+                  <i class="fa fa-angle-left"></i> Cisco综合实验
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E7%AC%94%E8%AE%B02/" rel="next" title="渗透测试笔记2">
+                  渗透测试笔记2 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Xzt</span>
+  </div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+-->
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

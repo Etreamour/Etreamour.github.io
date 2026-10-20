@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha256-4Lad8m4ZWW1Lgb9+sMVLYEfnIh7BjV1NQMEe79Pviks=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"etreamour.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.29.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文记录文件上传漏洞原理、基础校验过程等。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="文件上传漏洞">
+<meta property="og:url" content="https://etreamour.github.io/2026/10/16/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/index.html">
+<meta property="og:site_name" content="欢迎访问我的博客">
+<meta property="og:description" content="本文记录文件上传漏洞原理、基础校验过程等。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/16/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/%E5%9B%BE%E7%89%871.png">
+<meta property="article:published_time" content="2026-10-16T01:53:21.000Z">
+<meta property="article:modified_time" content="2026-10-16T02:03:46.245Z">
+<meta property="article:author" content="Xzt">
+<meta property="article:tag" content="web安全">
+<meta property="article:tag" content="文件上传漏洞">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://etreamour.github.io/2026/10/16/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/%E5%9B%BE%E7%89%871.png">
+
+
+<link rel="canonical" href="https://etreamour.github.io/2026/10/16/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://etreamour.github.io/2026/10/16/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/","path":"2026/10/16/文件上传漏洞/","title":"文件上传漏洞"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>文件上传漏洞 | 欢迎访问我的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-search popup-trigger" aria-label="搜索" role="button">
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">欢迎访问我的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习记录，分享知识</p>
+  </div>
+
+  <div class="site-nav-toggle" aria-label="切换导航栏" role="button">
+      <i class="fa fa-ellipsis fa-fw fa-lg"></i>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">9</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-layer-group fa-fw"></i>分类<span class="badge">6</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xzt</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://etreamour.github.io/2026/10/16/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xzt">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="欢迎访问我的博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="文件上传漏洞 | 欢迎访问我的博客">
+      <meta itemprop="description" content="本文记录文件上传漏洞原理、基础校验过程等。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          文件上传漏洞
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-10-16 09:53:21 / 修改时间：10:03:46" itemprop="dateCreated datePublished" datetime="2026-10-16T09:53:21+08:00">2026-10-16</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">Web安全</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/%E6%BC%8F%E6%B4%9E%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">漏洞笔记</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">本文记录文件上传漏洞原理、基础校验过程等。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>文件上传漏洞</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">典型攻击场景：在web应用程序中，文件上传通常常用于处理头像更换、文档共享、素材发布等合法业务需求。但时当服务器对上传文件的内容与执行权限没有实施有效管控，就会形成文件上传漏洞。一个典型的攻击场景包含以下</span><br><span class="line">	阶段1：上传后门脚本</span><br><span class="line">	攻击者通过业务上传口，将包含后端动态代码的恶意脚本（如包含命令执行函数的脚本文件）提交至服务端</span><br><span class="line">	阶段2：发起解析请求</span><br><span class="line">	脚本文件成功落盘，攻击者依旧接口响应信息或路径命令规律，通过HTTP请求直接访问该脚本在web目录中URL</span><br><span class="line">	阶段3：脚本引擎执行</span><br><span class="line">	Web服务器根据请求的文件拓展名，将请求分流并交付给后端脚本解析器（.php-&gt;php），解析器将文件内容作为程序指令解析并执行</span><br><span class="line">	阶段4：获取系统权限</span><br><span class="line">	恶意脚本被激活执行后，攻击者通过在请求中附加控制参数，实现远程系统命令执行，取得与目标系统的交互</span><br><span class="line">	</span><br><span class="line">文件上传漏洞（cwe-434）：指应用程序允许用户向服务器传输文件。但未能对文件的类型、内容、存储位置以及执行权限进行充分的限制与隔离，致使攻击者能够将恶意脚本持久化存储到WEB目录，并借助web服务或脚本解析器执行文件，最终获得目标服务器的代码执行权限</span><br></pre></td></tr></table></figure>
+
+<p>文件上传成功利用三要素：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.传的进（突破校验）：突破传输与接口层所以检验（前端、MIME、黑名单等）</span><br><span class="line">2.存的对（路径可达）：成功保存再Web目录，且物理访问路径可知或可推测</span><br><span class="line">3.跑得快（环境解析）：所在目录具备执行权限，被web容器路由至解析器动态执行</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">常规流程（静态存储）：服务器相当于大型仓储中心，用户上传的文件相当于寄送的货物。常规情况喜爱，货物为衣服或图纸（静态图像或文档），入库被放置再货架上，外部人员仅能调阅查看，不产生任何动态行为</span><br><span class="line"></span><br><span class="line">漏洞状态（通电激活）：攻击者寄送了具备远程控制功能的工业设备（webshell脚本）。仓储人员即未开箱排查（校验缺失），又将该设备连接外部电网的展示台上（具备脚本解析与执行权限的WEB目录）。外部人员只需要再场外发送无线控制信号（http请求），设备就会启动（拿到系统执行权限）</span><br></pre></td></tr></table></figure>
+
+<p>安全本质：数据与代码的边界混淆</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SQL注入：SQL语法分析器将外部不可信的“用户数据”误判为“数据库查询指令”</span><br><span class="line">文件上传：web容器及运行时环境将外部不可信的“文件静态数据”误判为“服务端可执行代码”</span><br></pre></td></tr></table></figure>
+
+<p>HTTP多部件表单数据（multipart&#x2F;form-data）报文与信任链断离</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">在HTTP协议中，传输结构化文件多使用键值对编码（application/x-www-urlencoded）。但需要向服务端传输图片、音频二进制文件时，HTTP协议引入了multipart/form-data机制</span><br><span class="line">该机制允许在一个HTTP请求中划分多个由边界标识符（Boundary）隔离的数据块，每个数据库独立携带元数据标头与荷载主体</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/16/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/%E5%9B%BE%E7%89%871.png" class="">
+
+<p>MIME</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">MIME：多用途互联网邮件拓展，是一种在网络传输中标识数据类型和格式的标准</span><br><span class="line">产生的背景：</span><br><span class="line">	起因：早期电子邮件协议（SMTP）仅支持纯7位的ACSIL文本传输，无法直接发图片、音频、附件或非英文字符。为了解决问题，因此推出了MIME标准</span><br><span class="line">	现状：已经超出了电子邮件范畴，成立HTTP协议、web开发及API交互中区分和处理各类多媒体内容的核心规范</span><br><span class="line">作用：告知接收端（浏览器或后端服务器）“这段数据到底是什么文件类型”，从而觉得是直接渲染、当作图片展示、下载保存、还是交给特定脚本处理</span><br></pre></td></tr></table></figure>
+
+<p>MIME格式结构：大类&#x2F;子类</p>
+<table>
+<thead>
+<tr>
+<th>大类</th>
+<th>含义</th>
+<th>常见示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>text&#x2F;</td>
+<td>文本文件，可以直接按字符编码解析</td>
+<td>text&#x2F;html（HTML页面）、text&#x2F;plain（纯文本）、text&#x2F;css（css文件）</td>
+</tr>
+<tr>
+<td>image&#x2F;</td>
+<td>图像文件</td>
+<td>image&#x2F;jpeg、image&#x2F;png、image&#x2F;git</td>
+</tr>
+<tr>
+<td>audio</td>
+<td>音频文件</td>
+<td>audio&#x2F;mpeg（MP3）、audio&#x2F;wav</td>
+</tr>
+<tr>
+<td>application</td>
+<td>应用程序数据或特定格式的二进制&#x2F;结构化数据</td>
+<td>application&#x2F;json、application&#x2F;pdf、application&#x2F;octst-stream（通用二进制流）</td>
+</tr>
+<tr>
+<td>video</td>
+<td>视频文件</td>
+<td>video&#x2F;mp4，video&#x2F;webm</td>
+</tr>
+<tr>
+<td>multipart</td>
+<td>包含多个不同媒体类型的片段组合体</td>
+<td>multipart&#x2F;form-data（web表单及文件上传）</td>
+</tr>
+</tbody></table>
+<p>在web与网络安全中的典型应用</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">http响应头 Web服务器向浏览器返回内容的时候通过Content-Type：image/jpeg，告诉浏览器这是一个图片，Conten-Type：text/html，告诉浏览器这个一个html</span><br><span class="line">文件上传场景与安全绕过：在文件上传报文中，每个文件分段都会带一个Conten-Type标识（Content-Type：image/jpeg）</span><br></pre></td></tr></table></figure>
+
+<p>Web服务器的分流机制与应用层攻击面</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">基于拓展名的请求分流逻辑</span><br><span class="line">客服端通过浏览器请求一个文件时，web服务器（Nginx、apache、lls）并非无差别返内容，而是依据请求的URL的文件拓展名执行分流</span><br><span class="line">HTTP GET请求到达Web服务器</span><br><span class="line">命中.jpg、.png、.html-&gt;路由至静态资源处理器-&gt;磁盘读取二进制数据流-&gt;直接返回客户端</span><br><span class="line">命中.php、..jsp、.asp-&gt;路由至脚本执行引擎-&gt;解析动态编译执行-&gt;执行结果返回客户端</span><br><span class="line"></span><br><span class="line">静态路由：当拓展名属于常规静态资源，web容器将作为普通的二进制数据从磁盘读取并原样输出，不触发任何代码执行</span><br><span class="line">动态路由：当拓展名命中动态脚本映射表，web容器将文件交付对应的脚本解释器（PHP），解析器将文本作为程序代码解析运行</span><br></pre></td></tr></table></figure>
+
+<p>文件上传核心攻击面：应用层校验缺失</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1.前端校验替代服务端校验：仅在浏览器通过JS验证拓展名，未在后端进行二次验证。攻击者绕过前端脚本即可直达后端</span><br><span class="line">2.信任客户端自报的MIME类型：后端仅检查HTTP请求头的Conten-Type：，被攻击者修改为合法值轻松绕过</span><br><span class="line">3.黑名单过滤不严：试图通过排除特定危险拓展名（仅禁止.PHP）进行防御，未考虑到同义解析后缀（.phtml、.php5）或大小写混合形式</span><br><span class="line">4.存储与执行权限未隔离：将用户上传的文件直接存在WEB容器具备执行权限的公开目录下，且保存了用户原始的拓展名</span><br></pre></td></tr></table></figure>
+
+<p>文件上传漏洞的发现与黑盒探测阶梯</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">第一阶：路径感知与命名规则</span><br><span class="line">		上传标准合法文件：test.jpg</span><br><span class="line">			观察服务端是否返回完整的文件访问URL</span><br><span class="line">			检查文件是否被服务端重命名</span><br><span class="line">第二阶：客户端边界探测</span><br><span class="line">		上传修改了拓展名的文件：test.php</span><br><span class="line">			点击提交是否出现原生的弹窗且无网络请求-&gt;证明前端存在js校验</span><br><span class="line">			抓包绕过前端，观察请求是否能够到达服务端</span><br><span class="line">第三阶：服务端基础校验探测</span><br><span class="line">		利用抓包工具拦截报文并篡改字段</span><br><span class="line">			伪造合法的Content-Type，提交异常拓展名（php）-&gt;探测服务端是否仅校验MIME</span><br><span class="line">			提交大小写混合后缀或同义词后缀-&gt;探测服务端是否采用不完善的黑名单</span><br><span class="line">第四阶：执行环境和权限判定</span><br><span class="line">		确认文件落盘路径后向其发送请求</span><br><span class="line">			浏览器直接展示代码文本或触发文件下载-&gt;该目录无脚本执行权限（安全）</span><br><span class="line">			响应为空白或返回脚本运算结果-&gt;文件被解析器动态执行（存在文件上传漏洞）</span><br></pre></td></tr></table></figure>
+
+<p>校验链分级刨析：应用层基础校验</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">客户端浏览器-&gt;1.前端JS校验-&gt;网络传输-&gt;2.Content-Type头校验-&gt;3.基础后缀黑名单</span><br><span class="line"></span><br><span class="line">关卡1：前端JS校验与网络层绕过</span><br><span class="line">	校验机制：浏览器在用户选定文件并触发提交事件，调用前端的内置JS函数，读取DOM节点中&lt;input type=＂file＂&gt;的文件路径，通过正则表达式提取后缀名，若后缀不在允许的列表内，直接调用前端告警并中断表单提交，阻止请求网络层发出</span><br><span class="line">	失效原因与绕过方式</span><br><span class="line">		1.客户端运行时的可控性：前端代码运行在用户本地浏览器环境中，用户可以通过浏览器开发工具直接修改、注销校验函数、或移除表单事件监听器</span><br><span class="line">		2.脱离浏览器直发请求：HTTP请求的本质是基于TCP传输的标准文本。攻击者无需依赖浏览器界面，可以直接使用网络测试工具（Burp Suite、curl）构造合法的多表单请求直接注入服务接口，前端校验失效</span><br><span class="line"></span><br><span class="line">关卡2：MIME头校验</span><br><span class="line">	校验机制：服务端代码通过请求解析库，读取HTTP请求当前部件头部的局部Content-Type字段，比对该值是否落在允许的MIME白名单中（image/jpeg、image/png）</span><br><span class="line">	失效原因与绕过方式</span><br><span class="line">		局部Content-Type是客户端在上传报文自行声明的元数据</span><br><span class="line">		浏览器在生成该字段时，仅依旧本地文件拓展名查询操作系统注册表进行映射填报</span><br><span class="line">		攻击者在利用抓包工具，可将原本脚本文件Content-Type：application/x-php手动篡改为合法的image/jpeg，服务端若仅对比该字符串可被轻易欺骗并放行</span><br><span class="line"></span><br><span class="line">关卡3：基础后缀黑名单及其局限性</span><br><span class="line">	校验机制：服务端在代码中预定义了不可信的拓展名列表（php、asp、jsp）在接收到文件后提取拓展名，若存在于黑名单则予以拦截</span><br><span class="line">	黑名单只禁止预定义的后缀，白名单只放行预定义的后缀</span><br><span class="line">	基础黑名单的疏漏</span><br><span class="line">		1.大小写转换缺失：若服务器代码未显示调用strtolower()处理后缀字符串，攻击者提交shell.pHP或shell.PHP即可避开全小写形式的黑名单比对，在windows等大小写不敏感的文件系统或特定配置web容器中，该文件落盘后依然被脚本引擎正常调用解析</span><br><span class="line">		2.常见解析别名（替代拓展名）遗漏：在apache、lls或PHP的传统配种，除.php外，往往同时注册了多个脚本解析别名：phtml、php5、php7、pht、phar。开发人员编写黑名单时通常仅拦截主拓展名，导致别名成为逃逸路径</span><br></pre></td></tr></table></figure>
+
+<p>中间件解析缺陷与目录及配置劫持</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Nginx cgi.fix_pathinfo路径回退解析缺陷，并非Nginx本身的代码错误，而是Nginx的FastCGI路由规则与PHP的配置不当相互结合的逻辑漏洞</span><br><span class="line">	HTTP请求：GET /uploads/avatar.jpg/x.php</span><br><span class="line">	步骤一：Nginx的路由匹配-&gt;URL包含.php匹配loaction ~\.php转给PHP-FPM</span><br><span class="line">	步骤二：PHP-FPM磁盘查找-&gt;寻找/uploads/avatar.jpg/x.php，物理文件不存在</span><br><span class="line">	步骤三：触发cgi.fix_pathinfo-&gt;php解析器自动向左截断路径，检查/uploads/avatar.jpg</span><br><span class="line">	步骤四：命中图片物理文件-&gt;/uploads/avatar.jpg真实存在，PHP将其强制作为脚本解析执行</span><br><span class="line">前提配置：</span><br><span class="line">	php.ini配置了cgi.fix_pathinfo=1开启CGI路径修改功能</span><br><span class="line">	Nginx的FastCGI配置采用通用正则（loaction ~\.php），且未校验目标物理是否存在直接转发</span><br><span class="line">	</span><br><span class="line">交互流程</span><br><span class="line">步骤1：攻击者上传包含恶意PHP代码的合法图片马avatar.jpg并落盘</span><br><span class="line">步骤2：攻击者访问构造的畸形路径 http://example.com/uploads/avatar.jpg/x.php</span><br><span class="line">步骤3：Nginx接收请求，由于URL尾部符合\.php正则，将其通过FastCGI协议封装并转发给后端PHP-FPM进程</span><br><span class="line">步骤4：PHP-FPM尝试在磁盘上定位/uploads/avatar.jpg/x.php，确认该路径文件不存在</span><br><span class="line">步骤5：由于cgi.fix_pathinfo=1生效，PHP解析器推测/x.php为传入的附加路径信息，自动向左截断一层路径，转而探测前级路径/uploads/avatar.jpg是否存在</span><br><span class="line">步骤6：系统检测到/uploads/avatar.jpg物理存在，PHP-FPM将avatar.jpg作为PHP源码载入执行，图片内部包含的后门被顺利执行</span><br><span class="line"></span><br><span class="line">目录及配置文件劫持：若上传功能未严格限制文件名，允许攻击者上传web容器的目录具备配置文件，攻击者就能通过改写解析规则，使原本无害的静态文件变为可执行代码</span><br><span class="line">	Apache的.htaacees  AddType application/x-httpd-php.jpg</span><br><span class="line">	Nginx/FastCGI环境下的.user.ini  auto_perpend_file = avatar.jpg</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/web%E5%AE%89%E5%85%A8/" rel="tag"># web安全</a>
+              <a href="/tags/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/" rel="tag"># 文件上传漏洞</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/" rel="prev" title="SQL注入">
+                  <i class="fa fa-angle-left"></i> SQL注入
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/10/20/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5%E4%B8%8E%E5%8F%82%E6%95%B0%E6%B3%A8%E5%85%A5/" rel="next" title="命令注入与参数注入">
+                  命令注入与参数注入 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Xzt</span>
+  </div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+-->
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>
