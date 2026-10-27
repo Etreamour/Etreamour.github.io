@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha256-4Lad8m4ZWW1Lgb9+sMVLYEfnIh7BjV1NQMEe79Pviks=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"etreamour.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.29.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文记录了一个Cisco综合实验，完成整个网络拓扑图的配置。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cisco综合实验">
+<meta property="og:url" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/index.html">
+<meta property="og:site_name" content="欢迎访问我的博客">
+<meta property="og:description" content="本文记录了一个Cisco综合实验，完成整个网络拓扑图的配置。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%871.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%872.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%873.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%874.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%875.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%876.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%877.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%878.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%879.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8710.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8711.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8712.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8713.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8714.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8715.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8716.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8717.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8718.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8719.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8720.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8721.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8722.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8723.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8724.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8725.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8726.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8727.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8728.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8729.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8730.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8731.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8732.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8733.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8734.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8735.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8736.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8737.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8738.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8739.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8740.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8741.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8742.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8743.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8744.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8745.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8746.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8747.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8748.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8749.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8750.png">
+<meta property="og:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8751.png">
+<meta property="article:published_time" content="2026-09-01T02:07:00.000Z">
+<meta property="article:modified_time" content="2026-10-19T01:16:00.023Z">
+<meta property="article:author" content="Xzt">
+<meta property="article:tag" content="计算机网络">
+<meta property="article:tag" content="路由器、交换机">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%871.png">
+
+
+<link rel="canonical" href="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/","path":"2026/09/01/Cisco综合实验/","title":"Cisco综合实验"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>Cisco综合实验 | 欢迎访问我的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-search popup-trigger" aria-label="搜索" role="button">
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">欢迎访问我的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习记录，分享知识</p>
+  </div>
+
+  <div class="site-nav-toggle" aria-label="切换导航栏" role="button">
+      <i class="fa fa-ellipsis fa-fw fa-lg"></i>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">12</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-layer-group fa-fw"></i>分类<span class="badge">6</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">11</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xzt</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://etreamour.github.io/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xzt">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="欢迎访问我的博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="Cisco综合实验 | 欢迎访问我的博客">
+      <meta itemprop="description" content="本文记录了一个Cisco综合实验，完成整个网络拓扑图的配置。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Cisco综合实验
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-09-01 10:07:00" itemprop="dateCreated datePublished" datetime="2026-09-01T10:07:00+08:00">2026-09-01</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-10-19 09:16:00" itemprop="dateModified" datetime="2026-10-19T09:16:00+08:00">2026-10-19</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/Cisco/" itemprop="url" rel="index"><span itemprop="name">Cisco</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">本文记录了一个Cisco综合实验，完成整个网络拓扑图的配置。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>Cisco综合实验</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%871.png" class="">
+
+<p>配置服务器</p>
+<p>Server0</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%872.png" class="">
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%873.png" class="">
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%874.png" class="">
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%875.png" class="">
+
+<p>Server1</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%876.png" class="">
+
+<p>配置PC机</p>
+<p>PC0-PC5由服务器DHCP自动分配地址</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%877.png" class="">
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%878.png" class="">
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%879.png" class="">
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8710.png" class="">
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8711.png" class="">
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8712.png" class="">
+
+<p>PC6</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8713.png" class="">
+
+<p>PC7</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8714.png" class="">
+
+<p>配置路由器</p>
+<p>R0</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal </span><br><span class="line">xzt-Router(config)#ip nat pool v1020 192.168.5.1 192.168.5.1 netmask 255.0.0.0（设置nat地址池）</span><br><span class="line">xzt-Router(config)#ip nat pool v3040 192.168.4.2 192.168.4.2 netmask 255.0.0.0</span><br><span class="line">xzt-Router(config)#access-list 2 permit 192.168.10.0 0.0.0.255（添加ACL规则）</span><br><span class="line">xzt-Router(config)#access-list 2 permit 192.168.20.0 0.0.0.255</span><br><span class="line">xzt-Router(config)#access-list 3 permit 192.168.30.0 0.0.0.255</span><br><span class="line">xzt-Router(config)#access-list 3 permit 192.168.40.0 0.0.0.255</span><br><span class="line">xzt-Router(config)#ip nat inside source list 2 pool v1020 overload（应用nat地址池和ACL规则）</span><br><span class="line">xzt-Router(config)#ip nat inside source list 3 pool v3040 overload</span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.7.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#ip nat inside（设置进入端口）</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.5.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#ip nat outside（设置外出端口）</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f1/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.4.2 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#ip nat outside</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router rip</span><br><span class="line">xzt-Router(config-router)#network 192.168.7.0（公布路由）</span><br><span class="line">xzt-Router(config-router)#network 192.168.5.0</span><br><span class="line">xzt-Router(config-router)#network 192.168.4.0</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#enable password 123.com</span><br><span class="line">xzt-Router(config)#access-list 1 permit 192.168.10.0 0.0.0.255（添加ACL规则）</span><br><span class="line">xzt-Router(config)#username xzt password 123.com（用户名和密码）</span><br><span class="line">xzt-Router(config)#line vty 0 4</span><br><span class="line">xzt-Router(config-line)#login local</span><br><span class="line">xzt-Router(config-line)#access-class 1 in</span><br><span class="line">xzt-Router(config-line)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show ip nat translations（查看NAT地址转换）</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8715.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8716.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route（查看路由表）</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8717.png" class="">
+
+<p>R1</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal </span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.5.2 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.6.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router rip</span><br><span class="line">xzt-Router(config-router)#network 192.168.5.0</span><br><span class="line">xzt-Router(config-router)#network 192.168.6.0</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#enable password 123.com</span><br><span class="line">xzt-Router(config)#access-list 1 permit 192.168.10.0 0.0.0.255（添加ACL规则）</span><br><span class="line">xzt-Router(config)#username xzt password 123.com（用户名和密码）</span><br><span class="line">xzt-Router(config)#line vty 0 4</span><br><span class="line">xzt-Router(config-line)#login local</span><br><span class="line">xzt-Router(config-line)#access-class 1 in</span><br><span class="line">xzt-Router(config-line)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8718.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8719.png" class="">
+
+<p>R2</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal </span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.4.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.3.2 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router rip</span><br><span class="line">xzt-Router(config-router)#network 192.168.4.0</span><br><span class="line">xzt-Router(config-router)#network 192.168.3.0</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#enable password 123.com</span><br><span class="line">xzt-Router(config)#access-list 1 permit 192.168.10.0 0.0.0.255（添加ACL规则）</span><br><span class="line">xzt-Router(config)#username xzt password 123.com（用户名和密码）</span><br><span class="line">xzt-Router(config)#line vty 0 4</span><br><span class="line">xzt-Router(config-line)#login local</span><br><span class="line">xzt-Router(config-line)#access-class 1 in</span><br><span class="line">xzt-Router(config-line)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8720.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8721.png" class="">
+
+<p>R3</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal </span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.3.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.6.2 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f1/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.2.2 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router ospf 1</span><br><span class="line">xzt-Router(config-router)#network 192.168.2.0 0.0.0.255 area 1</span><br><span class="line">xzt-Router(config-router)#redistribute rip subnets</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#router rip</span><br><span class="line">xzt-Router(config-router)#network 192.168.3.0</span><br><span class="line">xzt-Router(config-router)#network 192.168.6.0</span><br><span class="line">xzt-Router(config-router)#redistribute ospf 1 metric 1</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#enable password 123.com</span><br><span class="line">xzt-Router(config)#access-list 1 permit 192.168.10.0 0.0.0.255（添加ACL规则）</span><br><span class="line">xzt-Router(config)#username xzt password 123.com（用户名和密码）</span><br><span class="line">xzt-Router(config)#line vty 0 4</span><br><span class="line">xzt-Router(config-line)#login local</span><br><span class="line">xzt-Router(config-line)#access-class 1 in</span><br><span class="line">xzt-Router(config-line)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8722.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8723.png" class="">
+
+<p>R4</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal </span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.2.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.1.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router ospf 1</span><br><span class="line">xzt-Router(config-router)#network 192.168.1.0 0.0.0.255 area 0</span><br><span class="line">xzt-Router(config-router)#network 192.168.2.0 0.0.0.255 area 1</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8724.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8725.png" class="">
+
+<p>R5</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal</span><br><span class="line">xzt-Router(config)#ip nat pool dzzh1 61.159.62.131 61.159.62.131 netmask 255.0.0.0</span><br><span class="line">xzt-Router(config)#access-list 1 permit 192.168.100.0 0.0.0.255</span><br><span class="line">xzt-Router(config)#ip nat inside source list 1 pool dzzh1 overload </span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.100.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#ip nat inside</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 61.159.62.131 255.0.0.0</span><br><span class="line">xzt-Router(config-if)#ip nat outside</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router ospf 1</span><br><span class="line">xzt-Router(config-router)#network 192.168.100.0 0.0.0.255 area 0</span><br><span class="line">xzt-Router(config-router)#network 61.159.62.131 0.255.255.255 area 0</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8726.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip nat translations</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8727.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8728.png" class="">
+
+<p>R6</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal </span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.1.2 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 61.159.62.130 255.0.0.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f1/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.8.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router ospf 1</span><br><span class="line">xzt-Router(config-router)#network 192.168.1.0 0.0.0.255 area 0</span><br><span class="line">xzt-Router(config-router)#network 192.168.8.0 0.0.0.255 area 2</span><br><span class="line">xzt-Router(config-router)#network 61.159.62.130 0.255.255.255 area 0</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8729.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8730.png" class="">
+
+<p>R7</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal </span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.8.2 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.9.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router ospf 1</span><br><span class="line">xzt-Router(config-router)#network 192.168.8.0 0.0.0.255 area 2</span><br><span class="line">xzt-Router(config-router)#network 192.168.9.0 0.0.0.255 area 2</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8731.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8732.png" class="">
+
+<p>R8</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal </span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.9.2 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.11.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router ospf 1</span><br><span class="line">xzt-Router(config-router)#network 192.168.9.0 0.0.0.255 area 2</span><br><span class="line">xzt-Router(config-router)#network 192.168.11.0 0.0.0.255 area 2</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8733.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8734.png" class="">
+
+<p>R0(1)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router&gt;enable </span><br><span class="line">xzt-Router#configure terminal</span><br><span class="line">xzt-Router(config)#interface f0/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.13.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown</span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f0/1</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.12.1 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#interface f1/0</span><br><span class="line">xzt-Router(config-if)#ip address 192.168.11.2 255.255.255.0</span><br><span class="line">xzt-Router(config-if)#no shutdown </span><br><span class="line">xzt-Router(config-if)#exit</span><br><span class="line">xzt-Router(config)#router ospf 1 </span><br><span class="line">xzt-Router(config-router)#network 192.168.11.0 0.0.0.255 area 2</span><br><span class="line">xzt-Router(config-router)#network 192.168.12.0 0.0.0.255 area 2</span><br><span class="line">xzt-Router(config-router)#network 192.168.13.0 0.0.0.255 area 2</span><br><span class="line">xzt-Router(config-router)#exit</span><br><span class="line">xzt-Router(config)#exit</span><br><span class="line">xzt-Router#write</span><br><span class="line">xzt-Router#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8735.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Router#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8736.png" class="">
+
+<p>配置二层交换机</p>
+<p>Sw0</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch&gt;enable </span><br><span class="line">xzt-Switch#configure terminal </span><br><span class="line">xzt-Switch(config)#interface f0/1</span><br><span class="line">xzt-Switch(config-if)#switchport mode access </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/2</span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/3</span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#exit</span><br><span class="line">xzt-Switch#write</span><br><span class="line">xzt-Switch#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8737.png" class="">
+
+<p>Sw1</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch&gt;enable </span><br><span class="line">xzt-Switch#configure terminal </span><br><span class="line">xzt-Switch(config)#vlan 10</span><br><span class="line">xzt-Switch(config-vlan)#name wg</span><br><span class="line">xzt-Switch(config-vlan)#exit</span><br><span class="line">xzt-Switch(config)#vlan 20</span><br><span class="line">xzt-Switch(config-vlan)#name yh1</span><br><span class="line">xzt-Switch(config-vlan)#exit</span><br><span class="line">xzt-Switch(config)#vlan 30</span><br><span class="line">xzt-Switch(config-vlan)#name yh2</span><br><span class="line">xzt-Switch(config-vlan)#exit</span><br><span class="line">xzt-Switch(config)#vlan 40</span><br><span class="line">xzt-Switch(config-vlan)#name server</span><br><span class="line">xzt-Switch(config-vlan)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/1</span><br><span class="line">xzt-Switch(config-if)#switchport mode access </span><br><span class="line">xzt-Switch(config-if)#switchport access vlan 10</span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/2</span><br><span class="line">xzt-Switch(config-if)#switchport mode access </span><br><span class="line">xzt-Switch(config-if)#switchport access vlan 20</span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/3</span><br><span class="line">xzt-Switch(config-if)#switchport mode access </span><br><span class="line">xzt-Switch(config-if)#switchport access vlan 30</span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/4</span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#enable password 123.com</span><br><span class="line">xzt-Switch(config)#ip default-gateway 192.168.50.254（设置网关）</span><br><span class="line">xzt-Switch(config)#access-list 1 permit 192.168.10.0 0.0.0.255（添加ACL规则）</span><br><span class="line">xzt-Switch(config)#username xzt password 123.com（用户名和密码）</span><br><span class="line">xzt-Switch(config)#line vty 0 4</span><br><span class="line">xzt-Switch(config-line)#login local</span><br><span class="line">xzt-Switch(config-line)#access-class 1 in</span><br><span class="line">xzt-Switch(config-line)#exit</span><br><span class="line">xzt-Switch(config)#exit</span><br><span class="line">xzt-Switch#write</span><br><span class="line">xzt-Switch#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8738.png" class="">
+
+<p>Sw2</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch&gt;enable </span><br><span class="line">xzt-Switch#configure terminal </span><br><span class="line">xzt-Switch(config)#interface f0/1</span><br><span class="line">xzt-Switch(config-if)#switchport mode access </span><br><span class="line">xzt-Switch(config-if)#switchport access vlan 10</span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/2</span><br><span class="line">xzt-Switch(config-if)#switchport mode access </span><br><span class="line">xzt-Switch(config-if)#switchport access vlan 20</span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/3</span><br><span class="line">xzt-Switch(config-if)#switchport mode access </span><br><span class="line">xzt-Switch(config-if)#switchport access vlan 30</span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/4</span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#enable password 123.com</span><br><span class="line">xzt-Switch(config)#ip default-gateway 192.168.50.254（设置网关）</span><br><span class="line">xzt-Switch(config)#access-list 1 permit 192.168.10.0 0.0.0.255（添加ACL规则）</span><br><span class="line">xzt-Switch(config)#username xzt password 123.com（用户名和密码）</span><br><span class="line">xzt-Switch(config)#line vty 0 4</span><br><span class="line">xzt-Switch(config-line)#login local</span><br><span class="line">xzt-Switch(config-line)#access-class 1 in</span><br><span class="line">xzt-Switch(config-line)#exit</span><br><span class="line">xzt-Switch(config)#exit</span><br><span class="line">xzt-Switch#write</span><br><span class="line">xzt-Switch#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8739.png" class="">
+
+<p>Sw3</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch(config)#interface f0/1</span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/3</span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/5</span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/6</span><br><span class="line">xzt-Switch(config-if)#switchport mode access </span><br><span class="line">xzt-Switch(config-if)#switchport access vlan 40</span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#enable password 123.com</span><br><span class="line">xzt-Switch(config)#ip default-gateway 192.168.50.254（设置网关）</span><br><span class="line">xzt-Switch(config)#access-list 1 permit 192.168.10.0 0.0.0.255（添加ACL规则）</span><br><span class="line">xzt-Switch(config)#username xzt password 123.com（用户名和密码）</span><br><span class="line">xzt-Switch(config)#line vty 0 4</span><br><span class="line">xzt-Switch(config-line)#login local</span><br><span class="line">xzt-Switch(config-line)#access-class 1 in</span><br><span class="line">xzt-Switch(config-line)#exit</span><br><span class="line">xzt-Switch(config)#exit</span><br><span class="line">xzt-Switch#write</span><br><span class="line">xzt-Switch#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8740.png" class="">
+
+<p>配置三层交换机</p>
+<p>M Sw0</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch&gt;enable </span><br><span class="line">xzt-Switch#configure terminal </span><br><span class="line">xzt-Switch(config)#ip routing</span><br><span class="line">xzt-Switch(config)#interface f0/1</span><br><span class="line">xzt-Switch(config-if)#switchport trunk encapsulation dot1q </span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/2</span><br><span class="line">xzt-Switch(config-if)#no switchport </span><br><span class="line">xzt-Switch(config-if)#ip address 192.168.7.2 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#no shutdown </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">Switch(config)#interface vlan 10</span><br><span class="line">Switch(config-if)#ip address 192.168.10.1 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#ip helper-address 192.168.40.111</span><br><span class="line">Switch(config-if)#no shutdown</span><br><span class="line">Switch(config-if)#exit</span><br><span class="line">Switch(config)#interface vlan 20</span><br><span class="line">Switch(config-if)#ip address 192.168.20.1 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#ip helper-address 192.168.40.111</span><br><span class="line">Switch(config-if)#no shutdown </span><br><span class="line">Switch(config-if)#exit</span><br><span class="line">Switch(config)#interface vlan 30</span><br><span class="line">Switch(config-if)#ip address 192.168.30.1 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#ip helper-address 192.168.40.111</span><br><span class="line">Switch(config-if)#no shutdown </span><br><span class="line">Switch(config-if)#exit</span><br><span class="line">Switch(config)#interface vlan 40</span><br><span class="line">Switch(config-if)#ip address 192.168.40.1 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#ip helper-address 192.168.40.111</span><br><span class="line">Switch(config-if)#no shutdown </span><br><span class="line">Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface vlan 1</span><br><span class="line">xzt-Switch(config-if)#ip address 192.168.50.254 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#no shutdown </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#router rip </span><br><span class="line">xzt-Switch(config-router)#network 192.168.10.0</span><br><span class="line">xzt-Switch(config-router)#network 192.168.7.0</span><br><span class="line">xzt-Switch(config-router)#network 192.168.20.0</span><br><span class="line">xzt-Switch(config-router)#network 192.168.30.0</span><br><span class="line">xzt-Switch(config-router)#network 192.168.40.0</span><br><span class="line">xzt-Switch(config-router)#network 192.168.50.0</span><br><span class="line">xzt-Switch(config-router)#exit</span><br><span class="line">xzt-Switch(config)#enable password 123.com</span><br><span class="line">xzt-Switch(config)#ip default-gateway 192.168.7.1（设置网关）</span><br><span class="line">xzt-Switch(config)#access-list 1 permit 192.168.10.0 0.0.0.255（添加ACL规则）</span><br><span class="line">xzt-Switch(config)#username xzt password 123.com（用户名和密码）</span><br><span class="line">xzt-Switch(config)#line vty 0 4</span><br><span class="line">xzt-Switch(config-line)#login local</span><br><span class="line">xzt-Switch(config-line)#access-class 1 in</span><br><span class="line">xzt-Switch(config-line)#exit</span><br><span class="line">xzt-Switch(config)#exit</span><br><span class="line">xzt-Switch#write</span><br><span class="line">xzt-Switch#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8741.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8742.png" class="">
+
+<p>M Sw0(1)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch&gt;enable </span><br><span class="line">xzt-Switch#configure terminal </span><br><span class="line">xzt-Switch(config)#interface f0/1</span><br><span class="line">xzt-Switch(config-if)#no switchport </span><br><span class="line">xzt-Switch(config-if)#ip address 192.168.13.2 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#no shutdown </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/2</span><br><span class="line">xzt-Switch(config-if)#switchport trunk encapsulation dot1q </span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/3</span><br><span class="line">xzt-Switch(config-if)#switchport trunk encapsulation dot1q </span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface vlan 1</span><br><span class="line">xzt-Switch(config-if)#ip address 192.168.14.2 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#standby 1 ip 192.168.14.254（双机热备）</span><br><span class="line">xzt-Switch(config-if)#no shutdown </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#router ospf 1</span><br><span class="line">xzt-Switch(config-router)#network 192.168.14.0 0.0.0.255 area 2</span><br><span class="line">xzt-Switch(config-router)#network 192.168.13.0 0.0.0.255 area 2</span><br><span class="line">xzt-Switch(config-router)#exit</span><br><span class="line">xzt-Switch(config)#exit</span><br><span class="line">xzt-Switch#write</span><br><span class="line">xzt-Switch#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8743.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8744.png" class="">
+
+<p>M Sw1</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch&gt;enable </span><br><span class="line">xzt-Switch#configure terminal </span><br><span class="line">xzt-Switch(config)#interface f0/1</span><br><span class="line">xzt-Switch(config-if)#no switchport </span><br><span class="line">xzt-Switch(config-if)#ip address 192.168.12.2 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#no shutdown </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/2</span><br><span class="line">xzt-Switch(config-if)#switchport trunk encapsulation dot1q </span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface f0/3</span><br><span class="line">xzt-Switch(config-if)#switchport trunk encapsulation dot1q </span><br><span class="line">xzt-Switch(config-if)#switchport mode trunk </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#interface vlan 1</span><br><span class="line">xzt-Switch(config-if)#ip address 192.168.14.3 255.255.255.0</span><br><span class="line">xzt-Switch(config-if)#standby 1 ip 192.168.14.254</span><br><span class="line">xzt-Switch(config-if)#no shutdown </span><br><span class="line">xzt-Switch(config-if)#exit</span><br><span class="line">xzt-Switch(config)#router ospf 1</span><br><span class="line">xzt-Switch(config-router)#network 192.168.14.0 0.0.0.255 area 2</span><br><span class="line">xzt-Switch(config-router)#network 192.168.12.0 0.0.0.255 area 2</span><br><span class="line">xzt-Switch(config-router)#exit</span><br><span class="line">xzt-Switch(config)#exit</span><br><span class="line">xzt-Switch#write</span><br><span class="line">xzt-Switch#show running-config</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8745.png" class="">
+
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">xzt-Switch#show ip route</span><br></pre></td></tr></table></figure>
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8746.png" class="">
+
+<p>验证：能访问到area2服务器</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8747.png" class="">
+
+<p>NAT地址转换，vlan30，vlan40转换为192.168.4.2</p>
+<p>NAT地址转换，valn10，vlan20转换为192.168.5.1</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8748.png" class="">
+
+<p>NAT地址转换PAT 将100.0网络转换为61.159.62.131</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8749.png" class="">
+
+<p>配置ACL实现公司要求：</p>
+<p>配置ACL实现网络设备只允许管理区IP地址可以通过TELNET登录，并配置设备用户名为xzt，密码为123.com</p>
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8750.png" class="">
+
+<img src="/2026/09/01/Cisco%E7%BB%BC%E5%90%88%E5%AE%9E%E9%AA%8C/%E5%9B%BE%E7%89%8751.png" class="">
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" rel="tag"># 计算机网络</a>
+              <a href="/tags/%E8%B7%AF%E7%94%B1%E5%99%A8%E3%80%81%E4%BA%A4%E6%8D%A2%E6%9C%BA/" rel="tag"># 路由器、交换机</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/08/21/%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/" rel="prev" title="网络笔记">
+                  <i class="fa fa-angle-left"></i> 网络笔记
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/10/08/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95%E7%AC%94%E8%AE%B01/" rel="next" title="渗透测试笔记1">
+                  渗透测试笔记1 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Xzt</span>
+  </div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+-->
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>

