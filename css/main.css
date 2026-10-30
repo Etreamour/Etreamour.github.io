@@ -1380,7 +1380,7 @@ pre code {
   vertical-align: middle;
 }
 .links-of-author a::before {
-  background: #ffe255;
+  background: #529f18;
   display: inline-block;
   margin-right: 3px;
   transform: translateY(-2px);
@@ -2737,11 +2737,12 @@ body {
 .main-inner > .tabs-comment,
 .main-inner > .comments,
 .main-inner > .pagination {
-  background: rgba(30,30,30,0.85) !important;
-  backdrop-filter: blur(15px) saturate(150%) !important;
-  -webkit-backdrop-filter: blur(15px) saturate(150%) !important;
+  background: rgba(30,30,30,0.45) !important;
+  backdrop-filter: blur(20px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
   border-radius: 12px !important;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.5) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important; /* 阴影稍微柔和一点 */
+  border: 1px solid rgba(255,255,255,0.1) !important; /* 增加一圈极细的高光边框，提升玻璃质感 */
 }
 .post-body,
 .post-title,
@@ -2754,8 +2755,10 @@ body {
 .main-inner h2,
 .main-inner h3 {
   color: #f0f0f0 !important;
-  text-shadow: none !important;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important; /* 加一点点极淡的阴影防止部分亮色背景导致字看不清 */
 }
 .header-inner {
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.3) !important; /* 也调低一点透明度 */
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
 }
