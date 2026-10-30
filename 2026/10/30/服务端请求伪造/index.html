@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha256-4Lad8m4ZWW1Lgb9+sMVLYEfnIh7BjV1NQMEe79Pviks=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"etreamour.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.29.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文记录SSRF基础原理、危害的阶段等信息。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="服务端请求伪造">
+<meta property="og:url" content="https://etreamour.github.io/2026/10/30/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%AF%B7%E6%B1%82%E4%BC%AA%E9%80%A0/index.html">
+<meta property="og:site_name" content="欢迎访问我的博客">
+<meta property="og:description" content="本文记录SSRF基础原理、危害的阶段等信息。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-10-30T03:08:18.000Z">
+<meta property="article:modified_time" content="2026-10-30T04:19:04.608Z">
+<meta property="article:author" content="Xzt">
+<meta property="article:tag" content="web安全">
+<meta property="article:tag" content="SSRF">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://etreamour.github.io/2026/10/30/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%AF%B7%E6%B1%82%E4%BC%AA%E9%80%A0/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://etreamour.github.io/2026/10/30/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%AF%B7%E6%B1%82%E4%BC%AA%E9%80%A0/","path":"2026/10/30/服务端请求伪造/","title":"服务端请求伪造"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>服务端请求伪造 | 欢迎访问我的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-search popup-trigger" aria-label="搜索" role="button">
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">欢迎访问我的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习记录，分享知识</p>
+  </div>
+
+  <div class="site-nav-toggle" aria-label="切换导航栏" role="button">
+      <i class="fa fa-ellipsis fa-fw fa-lg"></i>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">13</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-layer-group fa-fw"></i>分类<span class="badge">6</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">12</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">Xzt</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://etreamour.github.io/2026/10/30/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%AF%B7%E6%B1%82%E4%BC%AA%E9%80%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="Xzt">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="欢迎访问我的博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="服务端请求伪造 | 欢迎访问我的博客">
+      <meta itemprop="description" content="本文记录SSRF基础原理、危害的阶段等信息。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          服务端请求伪造
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2026-10-30 11:08:18 / 修改时间：12:19:04" itemprop="dateCreated datePublished" datetime="2026-10-30T11:08:18+08:00">2026-10-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">Web安全</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/%E6%BC%8F%E6%B4%9E%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">漏洞笔记</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">本文记录SSRF基础原理、危害的阶段等信息。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>服务端请求伪造（SSRF）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">正常抓取外部图片与异常抓取内网资产现象对比</span><br><span class="line">正常业务交互（抓取外部正常图片）：</span><br><span class="line">  用户访问：http://www.example.com/api/fetch_image?url=https://www.example.org/logo.png</span><br><span class="line">  服务器向该公网地址发起请求，下载图片并正常显示在用户的浏览器上。</span><br><span class="line">异常现象一：借服务器之手偷看内网办公系统：</span><br><span class="line">	假设这家公司内网 192.168.1.10:8080 上运行着一套内部办公系统。因为有防火墙阻挡且属于内网地址，外部人员在自己的电脑浏览器里直接访问 http://192.168.1.10:8080/api/info 是根本连不上的。</span><br><span class="line">	但如果外部人员把内网地址填进刚才的图片抓取接口里：</span><br><span class="line">	[http://www.example.com/api/fetch_image?url=http://192.168.1.10:8080/api/info]		(http://www.example.com/api/fetch_image?url=http://192.168.1.10:8080/api/info)</span><br><span class="line"></span><br><span class="line">  浏览器页面上直接显示出了内网办公系统的内部数据：&#123;&quot;user&quot;: &quot;admin&quot;, &quot;internal_status&quot;: &quot;active&quot;&#125;。</span><br><span class="line"></span><br><span class="line">异常现象二：读取本机文件或云服务器内部信息：</span><br><span class="line">	如果外部人员在 PHP cURL 环境下传入 ?url=file:///etc/passwd，页面就会直接显示出服务器本地的账户列表文件；如果传入云主机的内部地址 ?url=http://169.254.169.254/latest/meta-data/，页面就会显示出云服务器内部的配置信息。</span><br></pre></td></tr></table></figure>
+
+<p>权威定义（CWE-918）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">服务端请求伪造（CWE-918）：指应用程序提供了从其他服务器获取数据的功能，但没有对用户提供的目标网址（URL）、协议类型以及最终解析出的IP地址做严格限制。攻击者可以借此诱导网站服务器充当跳板，利用服务器自身所处的内网位置，向原本受防火墙保护的内网服务器、本机隐藏端口或云服务器元数据接口发起未授权的访问请求</span><br><span class="line"></span><br><span class="line">┌────────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│                   前台电话代拨与内线转接类比模型                       │</span><br><span class="line">└────────────────────────────────────────────────────────────────────────┘</span><br><span class="line">  【正常业务场景】</span><br><span class="line">  住客（外部用户） ────► 找到大堂前台（Web 服务器）: &quot;请帮我拨打航空公司客服 95539 查票&quot;</span><br><span class="line">                        │</span><br><span class="line">                        ▼ (前台座机拨打外网公开电话)</span><br><span class="line">                  民航官方客服 95539 ──► 获知航班状态并转告住客</span><br><span class="line"></span><br><span class="line">  【SSRF 攻击场景】</span><br><span class="line">  外部访客（攻击者） ──► 找到大堂前台（Web 服务器）: &quot;请帮我拨打 8001 分机，并转述对方的话&quot;</span><br><span class="line">                        │</span><br><span class="line">                        ▼ (前台座机连在内网交换机上，直接拨通内部专用分机)</span><br><span class="line">                  8001 安保监控室（内网隔离系统）</span><br><span class="line">                        │</span><br><span class="line">                        ▼ (安保人员看是前台内线打来的，直接透露了内部信息)</span><br><span class="line">                  前台接待员把听到的内部信息原样告诉了外部访客</span><br></pre></td></tr></table></figure>
+
+<p>CSRF、SSRF 和 XXE 三者的核心区别如下：</p>
+<table>
+<thead>
+<tr>
+<th>漏洞类型</th>
+<th>被借用的对象</th>
+<th>请求从哪里发出</th>
+<th>核心攻击目标</th>
+<th>核心防御手段</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>CSRF（跨站请求伪造）</strong></td>
+<td>已登录用户的<strong>浏览器</strong></td>
+<td>用户的电脑</td>
+<td>借用浏览器自动附带的 Cookie，冒充用户本人执行转账或改密操作</td>
+<td>校验 Anti-CSRF Token、配置 <code>SameSite</code> 属性</td>
+</tr>
+<tr>
+<td><strong>SSRF（服务端请求伪造）</strong></td>
+<td>存在漏洞的 <strong>Web 服务器</strong></td>
+<td>机房里的服务器</td>
+<td>借用服务器的内网位置，穿透防火墙访问内网系统或本机服务</td>
+<td>限制服务器访问内网网段、校验域名白名单、单次解析绑定 IP</td>
+</tr>
+<tr>
+<td><strong>XXE（XML 外部实体注入）</strong></td>
+<td>服务端的 <strong>XML 解析器</strong></td>
+<td>机房里的服务器</td>
+<td>解析 XML 中的 <code>SYSTEM</code> 外部实体时，读取本地文件或触发 SSRF 请求</td>
+<td>在 XML 解析器中禁用 DTD 与外部实体</td>
+</tr>
+</tbody></table>
+<p>为什么外部电脑直接访问不到内网IP</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">互联网标准划分出了专门给局域网内部使用私网网络IP。全球互联网公网路由器有一条规则：一旦看到了目的地是私有内网IP的数据包，直接丢弃，不可再公网上传输；同时公司门口的防火墙也会拦截外部主动连入的请求</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>地址类别</th>
+<th>常见地址范围&#x2F;掩码</th>
+<th>通俗含义与常见风险</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>本机回环地址</td>
+<td>127.0.0.1</td>
+<td>服务器自己。很多管理员为了安全，会让数据库或管理服务只监听127.0.0.1，以为外人连不上。通过ssrf让服务器访问127.0.0.1就能直接连上这些本机服务</td>
+</tr>
+<tr>
+<td>局域网私有地址</td>
+<td>A类：10.0.0.0&#x2F;8B类：172.16.0.0&#x2F;16C类：192.168.0.0&#x2F;24</td>
+<td>企业内部机房与办公网专用网址，其中172.17.0.1是docker容器默认的宿主机网桥地址</td>
+</tr>
+<tr>
+<td>云服务元数据地址</td>
+<td>169.254.169.254（阿里云：100.100.100.200）</td>
+<td>公有云主机（阿里云、腾讯云）获取自身内部配置和临时管理密钥的固定内部地址</td>
+</tr>
+<tr>
+<td>全零地址</td>
+<td>0.0.0.0</td>
+<td>再linux系统中，当程序向0.0.0.0发起请求时，系统自动送到本机的127.0.0.1上。常被用来绕过针对127.0.0.1的简单过滤</td>
+</tr>
+</tbody></table>
+<p>回显与盲注</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">根据服务器抓取数据后是否把内容显示在网页上，ssrf分为有回显型和无回显盲注</span><br></pre></td></tr></table></figure>
+
+<p>有回显型SSRF</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">服务器请求内网地址后，把拿到网页源码、JSON数据或图片直接返回给浏览器，测试人员直接在页面看到内网内容</span><br></pre></td></tr></table></figure>
+
+<p>无回显盲注型SSRF怎么判断结果？</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">方法一：看响应时间和报错差异（判断内网某台机器的端口是否开放）</span><br><span class="line">	当服务器去连接内网某个IP和端口时，根据对方端口的不同状态，网页返回的速度也会有差异</span><br><span class="line">		状态1：目标内网主机存活，且端口开放（192.168.1.10:8080开着网站）</span><br><span class="line">		表现：响应很快</span><br><span class="line">		状态2：目标内网主机存活，但端口未开放（192.168.1.10:8080没有服务）</span><br><span class="line">		表现：响应很快，但如果开启了报错会提示：Connection refused</span><br><span class="line">		状态3：目标内网主机未存活，或者被内网防火墙静默丢弃</span><br><span class="line">		表现：网页转圈卡住，等了N秒才返回time out</span><br><span class="line">方法二：使用DNSLOG平台验证（目标服务器能访问公网）</span><br><span class="line">	要想确认服务器到底有没有替我们发包，最简单的办法是去DNSLOG平台领一个专属的测试域名（比如http://test123.dnslog.cn）填进输入框提交</span><br></pre></td></tr></table></figure>
+
+<p>危害演技阶梯：从内网端口探测到跨协议控制服务</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SSRF的危害从浅入深分为4个阶段</span><br><span class="line">	第一阶段：扫描内网有哪些存活机器和开放端口。通过传不同内网IP和端口，根据返回速度的快慢摸清内网结构</span><br><span class="line">	第二阶段：读取内网免密后台与监控接口。直接通过HTTP访问只对内网开放系统，例如访问Java Spring Boot的监控接口http://127.0.0.1:8080/actuator/env读取配置密码</span><br><span class="line">	第三阶段：读取云服务器元数据临时密钥：在公有云上请求http://169.254.169.254/latest/meta-data/iam/security-credentials/获取云主机的临时管理密钥</span><br><span class="line">	第四阶段：利用特殊协议控制内网服务（获取服务器权限）：后端请求库未限制协议，可利用file://读取服务器本地文件，或利用gopher://协议向本机未设置密码Redis发送指令，进而控制服务器</span><br></pre></td></tr></table></figure>
+
+<p>IP地址变形与黑名单局限：进制转换、缩写与自定义域名</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1点分十进制，只是为了方便人看，IPv4地址本质是一串32位的二进制数字，操作系统的地址转换非常宽容，支持把同一串地址写成八进制、十六进制或者合并成一个大数字</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>变形方式</th>
+<th>127.0.0.1的等价写法</th>
+<th>转换规则</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>八进制写法</td>
+<td><a target="_blank" rel="noopener" href="http://127.0.0.1/">http://0177.0.0.1/</a></td>
+<td>在数字前面加一个0。系统就会按八进制来计算。八进制的0177换成十进制的等于127（1<em>64+7</em>8+7&#x3D;127）</td>
+</tr>
+<tr>
+<td>十六进制写法</td>
+<td><a target="_blank" rel="noopener" href="http://0x7f.0.0.1或合并写http//0x7f000001">http://0x7f.0.0.1或合并写http://0x7f000001</a></td>
+<td>在前面加0x，系统就按十六进制计算。十六进制的0x7f换算成十进制等于127（7*16+15&#x3D;127）</td>
+</tr>
+<tr>
+<td>纯十进制大整数</td>
+<td><a target="_blank" rel="noopener" href="http://127.0.0.1/">http://2130706433/</a></td>
+<td>把127.0.0.1对应的32位二进制数直接转成一个完整十进制大整数</td>
+</tr>
+<tr>
+<td>省略中间的零</td>
+<td><a target="_blank" rel="noopener" href="http://127.0.0.1/">http://127.1</a></td>
+<td>当中间段全是0时，可以不写，127.1会被系统自动补充为127.0.0.1</td>
+</tr>
+<tr>
+<td>全零地址替代</td>
+<td><a target="_blank" rel="noopener" href="http://0.0.0.0或http//0/">http://0.0.0.0或http://0/</a></td>
+<td>在liunx系统下，访问0.0.0.0或0会被默认转到本机的127.0.0.1</td>
+</tr>
+</tbody></table>
+<p>自定义域名解析绕过</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">攻击者只需自己在网上注册一个域名，然后再域名后台添加一条A（IPv4，AAA是IPv6）记录，把域名记录解析指向127.0.0.1.当这个域名被提交时，代码检查无数字，且未正常域名直接放行，当服务器真正去请求域名时，经过DNS解析拿到的IP依然是127.0.0.1</span><br></pre></td></tr></table></figure>
+
+<p>什么是 302 重定向绕过（跳步缺陷）？</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">假设程序员改进了代码：在收到用户提交的网址后，先解析出它的 IP 地址，确认是一个合法的公网 IP 后才允许发起请求。</span><br><span class="line"></span><br><span class="line">但是，如果请求工具开启了**“自动跟随 301/302 跳转”**（比如 Python `requests.get()` 默认开启，或者 PHP cURL 设置了 `CURLOPT_FOLLOWLOCATION = true`），检查依然会被绕过：</span><br><span class="line"></span><br><span class="line">┌────────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│                   HTTP 302 重定向绕过流程推演                          │</span><br><span class="line">└────────────────────────────────────────────────────────────────────────┘</span><br><span class="line">  第 1 步：外部提交一个攻击者自己的公网网址</span><br><span class="line">  提交参数: url = [http://public-attacker.com/jump.php](http://public-attacker.com/jump.php)</span><br><span class="line">         │</span><br><span class="line">         ▼</span><br><span class="line">  第 2 步：服务器执行入口安全检查</span><br><span class="line">  检查结果: 域名 public-attacker.com 解析出来的确实是合法公网 IP</span><br><span class="line">  审查结论: 检查通过，允许发起请求</span><br><span class="line">         │</span><br><span class="line">         ▼</span><br><span class="line">  第 3 步：服务器向 [http://public-attacker.com/jump.php](http://public-attacker.com/jump.php) 发起第 1 次请求</span><br><span class="line">         │</span><br><span class="line">         ▼</span><br><span class="line">  第 4 步：攻击者的 jump.php 不返回图片，而是返回一条 302 重定向跳转指令</span><br><span class="line">  响应报文: HTTP/1.1 302 Found</span><br><span class="line">           Location: [http://127.0.0.1:6379/](http://127.0.0.1:6379/)</span><br><span class="line">         │</span><br><span class="line">         ▼</span><br><span class="line">  第 5 步：底层网络库自动跟随跳转（绕过发生）</span><br><span class="line">  【问题所在】：网络库看到 302 后，直接自动去连接 Location 里的 127.0.0.1，</span><br><span class="line">  没有再走一遍第 2 步的入口安全检查，从而连上了内网服务。</span><br></pre></td></tr></table></figure>
+
+<p>加固方法：关闭自动重定向与限制协议</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&lt;?php</span><br><span class="line">// PHP cURL 关闭自动跳转与限制协议的安全配置</span><br><span class="line">$ch = curl_init($validatedUrl);</span><br><span class="line">curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);</span><br><span class="line">curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);</span><br><span class="line">curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS);</span><br><span class="line">$output = curl_exec($ch);</span><br><span class="line">curl_close($ch);</span><br><span class="line">?&gt;</span><br><span class="line"></span><br><span class="line">【代码与参数逐拆】：cURL 防跳转与协议限制参数分析</span><br><span class="line">	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false)：</span><br><span class="line">	底层行为：禁止 cURL 在收到 301/302响应时自动跟随Location头部发起第二次请求。（在Python requests.get()中，因为默认是开启跳转的，必须手动加上allow_redirects=False参数来关闭）。</span><br><span class="line">	curl_setopt($ch, CURLOPT_PROTOCOLS, CURLPROTO_HTTP | CURLPROTO_HTTPS)：</span><br><span class="line">	底层行为：强制限定cURL只允许发起HTTP和HTTPS两种协议的请求，禁用file://、gopher://、dict://等其他协议。</span><br></pre></td></tr></table></figure>
+
+<p>Gopher 协议基础概念：如何向内网 Redis 发送控制命令</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">为什么普通的http://协议很难直接控制内网的Redis数据库？</span><br><span class="line">	内网里的Redis（默认6379端口）不是网站服务器，它有自己专门的通信命令格式。如果用http://127.0.0.1:6379/去连它，发过去的第一行固定是GET / HTTP/1.1等网页请求头，Redis收到后会报语法错误。</span><br><span class="line">Gopher协议的作用：</span><br><span class="line">	如果后端使用的是未限制协议的libcurl（如 PHP cURL），攻击者可以使用古老的gopher://协议（格式为 gopher://127.0.0.1:6379/_&lt;编码后的命令&gt;）。Gopher协议不会添加任何多余的HTTP请求头，而是把URL里构造好的数据流（包含回车换行符%0d%0a）原封不动地通过TCP发送给目标端口，从而可以向内网未设密码的Redis 直接发送命令。</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/web%E5%AE%89%E5%85%A8/" rel="tag"># web安全</a>
+              <a href="/tags/SSRF/" rel="tag"># SSRF</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/10/27/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/" rel="prev" title="文件包含漏洞">
+                  <i class="fa fa-angle-left"></i> 文件包含漏洞
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">Xzt</span>
+  </div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+-->
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>
