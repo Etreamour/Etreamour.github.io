@@ -1380,7 +1380,7 @@ pre code {
   vertical-align: middle;
 }
 .links-of-author a::before {
-  background: #de24ff;
+  background: #78ff04;
   display: inline-block;
   margin-right: 3px;
   transform: translateY(-2px);
@@ -2743,10 +2743,6 @@ body {
   border-radius: 12px !important;
   box-shadow: 0 8px 32px rgba(0,0,0,0.3) !important; /* 阴影稍微柔和一点 */
   border: 1px solid rgba(255,255,255,0.1) !important; /* 增加一圈极细的高光边框，提升玻璃质感 */
-/* 👇 新增的代码：用于调整块的大小 👇 */
-  max-width: 850px !important; /* 限制最大宽度，数字越小块越窄 */
-  margin: 30px auto !important; /* 保证块在页面中水平居中，且上下有间距 */
-  padding: 30px 40px !important; /* 减少内部留白：上下30px，左右40px */
 }
 .post-body,
 .post-title,
