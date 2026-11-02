@@ -1380,7 +1380,7 @@ pre code {
   vertical-align: middle;
 }
 .links-of-author a::before {
-  background: #78ff04;
+  background: #74fffc;
   display: inline-block;
   margin-right: 3px;
   transform: translateY(-2px);
@@ -2761,4 +2761,21 @@ body {
   background: rgba(255,255,255,0.3) !important; /* 也调低一点透明度 */
   backdrop-filter: blur(10px) !important;
   -webkit-backdrop-filter: blur(10px) !important;
+}
+/* 1. 去除所有行的交替背景色 */
+.post-body table tbody tr:nth-child(odd),
+.post-body table tbody tr:nth-child(even) {
+  background-color: transparent !important;
+}
+/* 2. 给表头加一点点淡淡的高光区分，并确保文字是浅色 */
+.post-body table th {
+  background-color: rgba(255,255,255,0.08) !important;
+  color: #f0f0f0 !important;
+  font-weight: bold;
+}
+/* 3. 统一单元格边框为半透明白色 */
+.post-body table th,
+.post-body table td {
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  padding: 10px 15px !important;
 }
