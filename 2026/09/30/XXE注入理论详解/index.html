@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#222" media="(prefers-color-scheme: dark)"><meta name="generator" content="Hexo 7.3.0">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha256-4Lad8m4ZWW1Lgb9+sMVLYEfnIh7BjV1NQMEe79Pviks=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"etreamour.github.io","root":"/","images":"/images","scheme":"Muse","darkmode":true,"version":"8.29.0","exturl":false,"sidebar":{"position":"left","width_expanded":320,"width_dual_column":240,"display":"post","padding":18,"offset":12},"hljswrap":true,"codeblock":{"theme":{"light":"default","dark":"stackoverflow-dark"},"prism":{"light":"prism","dark":"prism-dark"},"copy_button":{"enable":false,"style":null},"fold":{"enable":false,"height":500},"language":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"duration":200,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"}}</script><script src="/js/config.js" defer></script>
+
+    <meta name="description" content="本文记录XXE注入基础原理，业务场景切入与本质特征，XML与DTD语法基础及密码学扩展。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XXE注入理论详解">
+<meta property="og:url" content="https://etreamour.github.io/2026/09/30/XXE%E6%B3%A8%E5%85%A5%E7%90%86%E8%AE%BA%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="欢迎访问我的博客">
+<meta property="og:description" content="本文记录XXE注入基础原理，业务场景切入与本质特征，XML与DTD语法基础及密码学扩展。">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2026-09-30T01:17:41.000Z">
+<meta property="article:modified_time" content="2026-11-05T01:46:43.805Z">
+<meta property="article:author" content="X">
+<meta property="article:tag" content="web安全">
+<meta property="article:tag" content="XXE注入">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://etreamour.github.io/2026/09/30/XXE%E6%B3%A8%E5%85%A5%E7%90%86%E8%AE%BA%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://etreamour.github.io/2026/09/30/XXE%E6%B3%A8%E5%85%A5%E7%90%86%E8%AE%BA%E8%AF%A6%E8%A7%A3/","path":"2026/09/30/XXE注入理论详解/","title":"XXE注入理论详解"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>XXE注入理论详解 | 欢迎访问我的博客</title>
+  
+
+
+
+
+
+
+
+
+  
+<script src="/js/utils.js" defer></script><script src="/js/motion.js" defer></script><script src="/js/sidebar.js" defer></script><script src="/js/next-boot.js" defer></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-search popup-trigger" aria-label="搜索" role="button">
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">欢迎访问我的博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">学习记录，分享知识</p>
+  </div>
+
+  <div class="site-nav-toggle" aria-label="切换导航栏" role="button">
+      <i class="fa fa-ellipsis fa-fw fa-lg"></i>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签<span class="badge">15</span></a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-layer-group fa-fw"></i>分类<span class="badge">6</span></a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">14</span></a></li>
+  </ul>
+</nav>
+
+
+
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">X</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">15</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://etreamour.github.io/2026/09/30/XXE%E6%B3%A8%E5%85%A5%E7%90%86%E8%AE%BA%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="X">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="欢迎访问我的博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="XXE注入理论详解 | 欢迎访问我的博客">
+      <meta itemprop="description" content="本文记录XXE注入基础原理，业务场景切入与本质特征，XML与DTD语法基础及密码学扩展。">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          XXE注入理论详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2026-09-30 09:17:41" itemprop="dateCreated datePublished" datetime="2026-09-30T09:17:41+08:00">2026-09-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2026-11-05 09:46:43" itemprop="dateModified" datetime="2026-11-05T09:46:43+08:00">2026-11-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/" itemprop="url" rel="index"><span itemprop="name">Web安全</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Web%E5%AE%89%E5%85%A8/%E6%BC%8F%E6%B4%9E%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">漏洞笔记</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+            <div class="post-description">本文记录XXE注入基础原理，业务场景切入与本质特征，XML与DTD语法基础及密码学扩展。</div>
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody"><p>可拓展标记语言（XML，Extensible Markup Language）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">企业级Web接口：基于SOAP协议的web服务、大型金融支付通知</span><br><span class="line">配置与数据导入导出：企业管理系统导入员工花名册、财务报表、XML格式的同步</span><br><span class="line">身份认证断言：企业单点登录系统（SSO）广泛使用SAML2.0协议断言</span><br><span class="line">现代复合办公文档：Office文档（.docx、.xlsx）、SVG矢量矢图，其底层解压后本质上由相互关联的XML文本组成</span><br><span class="line"></span><br><span class="line">当服务器接收到客户端提交的XML格式数据时，后端业务代码无法直接将字符串当作对象使用，必须调用底层运行库提供的XML语法解析引擎（parser）将其解析为内存中的DOM数节点或事件流</span><br></pre></td></tr></table></figure>
+
+<p>XXE的本质</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">文本宏替换被赋予系统级I/O特权（XML解析引擎在做文本宏替换时，错误赋予了其读取外部文件的系统I/O特权）</span><br></pre></td></tr></table></figure>
+
+<p>XML外部注入实体（XXE，XML External Entity Injection）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">指被应用程序在解析不受信任的外部XML格式数据时，所调用的XML解析引擎默认开启对DTD（文档类型定义）及外部实体的解析支持。攻击者可在提交的XML报文中声明自定义的外部实体，利用SYSTEM关键字绑定操作系统的协议处理器（file://、http://）。诱导解析引擎在宏替换节点主动读取数据服务器本地敏感文件，或向企业内网发起非预期的网络探测</span><br><span class="line"></span><br><span class="line">┌────────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│                   公文模板引言与代购跑腿类比模型                       │</span><br><span class="line">└────────────────────────────────────────────────────────────────────────┘</span><br><span class="line">  【正常业务场景（内部宏替换）】</span><br><span class="line">  起草人 ──► 提交请示公文模板（XML 文档）:</span><br><span class="line">             &quot;规则声明：公文中的 [公司宗旨] 一律自动替换为 &#x27;客户第一、诚信守正&#x27;。&quot;</span><br><span class="line">             │</span><br><span class="line">             ▼ (排版员在内存中直接替换)</span><br><span class="line">  排版打印员 ──► 遇到 [公司宗旨] 占位符，直接把固定文字印入公文，正常交付。</span><br><span class="line"></span><br><span class="line">  【XXE 漏洞场景（外部实体越界跑腿）】</span><br><span class="line">  别有用心者 ──► 提交恶意公文模板（包含外部实体声明）:</span><br><span class="line">                 &quot;规则声明：公文中的 [保密条款]，请排版员去总经理办公室</span><br><span class="line">                 保险柜里把 /etc/passwd 档案拿出来，全文抄录在此处。&quot;</span><br><span class="line">                 │</span><br><span class="line">                 ▼ (排版员遵循了外部实体扩展规则)</span><br><span class="line">  糊涂排版员 ──► 离开工位，跑去总经理办公室（系统 I/O 调用），</span><br><span class="line">                 将机密档案翻阅出来抄在公文正文中打印给所有人！</span><br></pre></td></tr></table></figure>
+
+<p>核心漏洞横向对比</p>
+<table>
+<thead>
+<tr>
+<th>漏洞类型</th>
+<th>攻击核心对象</th>
+<th>触发执行层级</th>
+<th>漏洞物理行为</th>
+<th>防御着力点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SQL注入</td>
+<td>关系型数据库解析引擎</td>
+<td>数据库SQL语句</td>
+<td>不可信的输入改变了SQL抽象语法树结构</td>
+<td>预编译、参数化</td>
+</tr>
+<tr>
+<td>命令注入</td>
+<td>操作系统Shell解释器</td>
+<td>操作系统的底层进程调用</td>
+<td>不可信输入被拼接送入了Shell，分裂出全新的系统指令</td>
+<td>禁用shell&#x3D;true</td>
+</tr>
+<tr>
+<td>SSRF</td>
+<td>服务端底层网络库</td>
+<td>传输层&#x2F;应用层网络协议栈</td>
+<td>借道服务端在内网的特权网络位置向非预期目标发包</td>
+<td>物理隔离、白名单、单DNS绑定IP</td>
+</tr>
+<tr>
+<td>XXE注入</td>
+<td>XML语法解析引擎</td>
+<td>应用进程内部的数据序列化层</td>
+<td>外部实体展开被赋予系统的I&#x2F;O特权，读取本地文件或借道网络发包</td>
+<td>全局禁用DTD&#x2F;禁用外部实体解析</td>
+</tr>
+</tbody></table>
+<p>XML语法规范与DTD基础</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">XML是一种结构化的自描述数据载体。与浏览器容错能力极强HTML不同，XML规划时由W3C严格指定，具有不可违背的语法约束</span><br><span class="line">	1.单一根元素：一个良构的XML文档必须有且只有一个根元素包裹全部内容</span><br><span class="line">	2.标签必须严格成对闭合：遗漏闭合标签（&lt;user&gt;admin）会导致解析器立刻抛出Fatal Parsing Error终止解析</span><br><span class="line">	3.大小写严格敏感：&lt;Accout&gt;与&lt;accout&gt;会被判定为两个完全不同的节点</span><br><span class="line">	4.属性必须加以引号：属性值必须使用单引号或者双引号包裹（&lt;user id=&quot;101&quot;&gt;）</span><br><span class="line">	5.特殊保留符号：字符&lt;、&gt;、&amp;、&#x27;、&quot;属于XML的语法保留字符。若在普通数据中直接出现未转移的&lt;或&amp;，解析器会将其误认为新标签或实体起始，从而导致语法解析中断</span><br></pre></td></tr></table></figure>
+
+<p>一段标准的良构 XML 文档示例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;userInfo&gt;</span><br><span class="line">    &lt;userId&gt;1001&lt;/userId&gt;</span><br><span class="line">    &lt;username&gt;john_doe&lt;/username&gt;</span><br><span class="line">    &lt;status&gt;active&lt;/status&gt;</span><br><span class="line">&lt;/userInfo&gt;</span><br></pre></td></tr></table></figure>
+
+<p>DTD（文档类型定义，Document Type Definition）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DTD是XML经典约束机制，用于在解析实际数据之前，定义该XML文档中允许出现哪些元素、原生的嵌套次序、属性的合法类型，以及提前声明文档中可复用的实体。在业务场景中，DTD的初衷是作为数据契约，确保数据发送方与接收方遵从完全一致的字段规范</span><br></pre></td></tr></table></figure>
+
+<p>根据DTD声明所在的物理位置不同，DTD分为内部和外部两种形式</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">1.内部DTD子集</span><br><span class="line">	DTD规则直接通过&lt;!DOCTYPE根元素[...]&gt;语法内嵌在XML文档的前导部分</span><br><span class="line">	</span><br><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE userInfo [</span><br><span class="line">    &lt;!ELEMENT userInfo (userId, username, status)&gt;</span><br><span class="line">    &lt;!ELEMENT userId (#PCDATA)&gt;</span><br><span class="line">    &lt;!ELEMENT username (#PCDATA)&gt;</span><br><span class="line">    &lt;!ELEMENT status (#PCDATA)&gt;</span><br><span class="line">]&gt;</span><br><span class="line">&lt;userInfo&gt;</span><br><span class="line">    &lt;userId&gt;1001&lt;/userId&gt;</span><br><span class="line">    &lt;username&gt;john_doe&lt;/username&gt;</span><br><span class="line">    &lt;status&gt;active&lt;/status&gt;</span><br><span class="line">&lt;/userInfo&gt;</span><br><span class="line"></span><br><span class="line">2.外部DTD子集</span><br><span class="line">	DTD规则保存在一个独立的外部.dtd文件中，文档通过SYSTEM关键字指向该文件的本地路径或远程URL</span><br><span class="line">	</span><br><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE userInfo SYSTEM &quot;http://rules.company.com/schema/user.dtd&quot;&gt;</span><br><span class="line">&lt;userInfo&gt;</span><br><span class="line">    &lt;userId&gt;1001&lt;/userId&gt;</span><br><span class="line">    &lt;username&gt;john_doe&lt;/username&gt;</span><br><span class="line">    &lt;status&gt;active&lt;/status&gt;</span><br><span class="line">&lt;/userInfo&gt;</span><br></pre></td></tr></table></figure>
+
+<p>实体的本质：文本宏定义</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">在XML规范中，实体是用于简化文本输入，避免重复代码的抽象机制。他的作用等于C语言中的#define宏定义：预先给一段文本起一个名字，在正文中通过特定的符号引用该名字，解析器负责在内存中将其原样展开替换</span><br><span class="line">内部通用实体：无害的纯文本替换</span><br><span class="line">	内部通用实体在DTD内部声明字面量字符串，并在XML正文中以`&amp;实体名;`的语法进行引用</span><br><span class="line">	</span><br><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE note [</span><br><span class="line">    &lt;!-- 内部通用实体声明：纯文本宏 --&gt;</span><br><span class="line">    &lt;!ENTITY appName &quot;Antigravity Secure System&quot;&gt;</span><br><span class="line">]&gt;</span><br><span class="line">&lt;note&gt;</span><br><span class="line">    &lt;title&gt;&amp;appName;&lt;/title&gt;  &lt;!-- 引用实体 --&gt;</span><br><span class="line">&lt;/note&gt;</span><br><span class="line"></span><br><span class="line">解析行为：解析引擎在内存中构建语法树时，扫描到&amp;appName;，直接将其替换为字面量&quot;Antigravity Secure System&quot;。这个过程完全在进程内部内存中完成，不产生任何系统I/O调用，本身是完全无害的。</span><br><span class="line"></span><br><span class="line">外部通用实体：XXE漏洞的元凶</span><br><span class="line">	当实体的取值不再是硬编码的字面量，而是通过SYSTEM（系统标识符）或PUBLIC（公共标识符）指向一个操作系统外部资源路径或网络URL时，便构成了外部通用实体</span><br><span class="line">	</span><br><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE note [</span><br><span class="line">    &lt;!-- 外部通用实体声明：指向外部系统文件 --&gt;</span><br><span class="line">    &lt;!ENTITY secret SYSTEM &quot;file:///etc/passwd&quot;&gt;</span><br><span class="line">]&gt;</span><br><span class="line">&lt;note&gt;</span><br><span class="line">    &lt;title&gt;&amp;secret;&lt;/title&gt;  &lt;!-- 触发系统级文件读取并装填入节点 --&gt;</span><br><span class="line">&lt;/note&gt;</span><br></pre></td></tr></table></figure>
+
+<p>底层推导</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">┌────────────────────────────────────────────────────────────────────────┐</span><br><span class="line">│                   XML 解析器实体扫描微观时序推演                       │</span><br><span class="line">└────────────────────────────────────────────────────────────────────────┘</span><br><span class="line">  第 1 阶段：前导解析与 DTD 扫描 (Prologue Parsing)</span><br><span class="line">  解析器读取 XML 声明与 &lt;!DOCTYPE note [...]&gt; 结构</span><br><span class="line">         │</span><br><span class="line">         ▼</span><br><span class="line">  第 2 阶段：实体符号表注册 (Symbol Table Registration)</span><br><span class="line">  扫描到 &lt;!ENTITY secret SYSTEM &quot;file:///etc/passwd&quot;&gt;：</span><br><span class="line">  - 在内部符号表中创建条目 key=&quot;secret&quot;</span><br><span class="line">  - 标记该实体类型为 EXTERNAL_SYSTEM</span><br><span class="line">  - 启动协议分发器，打开本地句柄 /etc/passwd，读取文件字节流缓存进内存！</span><br><span class="line">         │</span><br><span class="line">         ▼</span><br><span class="line">  第 3 阶段：正文元素流式扫描 (Body Element Scanning)</span><br><span class="line">  解析器扫描正文标签 &lt;title&gt;，紧接着遇到实体引用标记: &#x27;&amp;&#x27; + &#x27;secret&#x27; + &#x27;;&#x27;</span><br><span class="line">         │</span><br><span class="line">         ▼</span><br><span class="line">  第 4 阶段：查表展开与内存节点填充 (Inline Expansion)</span><br><span class="line">  - 暂停正文流扫描，以 &quot;secret&quot; 为键查询符号表</span><br><span class="line">  - 提取预先读取出的 /etc/passwd 完整内容</span><br><span class="line">  - 将该文件内容直接作为 TextNode（文本子节点）灌入 &lt;title&gt; 节点内存中！</span><br><span class="line">         │</span><br><span class="line">         ▼</span><br><span class="line">  第 5 阶段：闭合与交接 (DOM Tree Delivery)</span><br><span class="line">  扫描闭合标签 &lt;/title&gt;，将装填了机密文件的完整 DOM 树对象交付给后端业务代码！</span><br></pre></td></tr></table></figure>
+
+<p>实体引用即资源拉取</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">现在主流的编程语言的底层XML解析库（c语言：libxml12、java：Xerces、python：lxml）均内置了协议分发器。当解析器在外部实体中遇到了SYSTEM&quot;URL&quot;结构式，底层分发器根据协议，动态调用对应的协议处理器执行操作</span><br></pre></td></tr></table></figure>
+
+<table>
+<thead>
+<tr>
+<th>协议</th>
+<th>底层协议处理器执行行为</th>
+<th>典型安全影响</th>
+<th>常见适用语言环境</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>file:&#x2F;&#x2F;</td>
+<td>调用系统底层open()&#x2F;read()读取本地磁盘文件</td>
+<td>读取本地敏感文件</td>
+<td>全语言通用</td>
+</tr>
+<tr>
+<td>http:&#x2F;&#x2F; https:&#x2F;&#x2F;</td>
+<td>建立TCP三次握手，向目标服务器发起标准的HTTP GET请求</td>
+<td>探测内网活动资产，攻击内网REST接口</td>
+<td>全语言通用</td>
+</tr>
+<tr>
+<td>ftp:&#x2F;&#x2F;&#x2F;</td>
+<td>发起FTP协议三次握手并尝试拉取数据流</td>
+<td>探测内网端口，在特定环境下外带多行数据</td>
+<td>Java、Php</td>
+</tr>
+<tr>
+<td>php:&#x2F;&#x2F;&#x2F;</td>
+<td>进入PHP流包装器处理流水线</td>
+<td>利用php:&#x2F;&#x2F;filter实施对php文件源码base64编码</td>
+<td>Php</td>
+</tr>
+</tbody></table>
+<p>进程权限继承：操作系统的虚拟文件系统边界</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">XML解析引擎所能夺取文件的物理范围，是受宿主操作系统进程账户的硬性约束</span><br><span class="line">	权限继承关系：XML解析器作为运行在web容器内部的子模块，其发起的一切系统调用均完全继承了web容器附近的操作系统账户身份（www-data）</span><br><span class="line">	低权限运行下的边界：如果web服务器遵循安全规范，以普通非特权用户（www-data）运行，当解析器读取/etc/shadow时，内核会直接返回错误，实体展开也会抛出权限异常错误</span><br><span class="line">	提权失控场景：若运维配置不当，直接以root或则Windows system权限启动了web容器，则解析器拥有读取所有文件的能力</span><br></pre></td></tr></table></figure>
+
+<p>经典利用请求与响应推演</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">客户端提交包含外部实体的 XML 报文：</span><br><span class="line">POST /api/profile/update HTTP/1.1</span><br><span class="line">Host: example.com</span><br><span class="line">Content-Type: application/xml</span><br><span class="line"></span><br><span class="line">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span><br><span class="line">&lt;!DOCTYPE profile [</span><br><span class="line">    &lt;!ENTITY leak SYSTEM &quot;file:///etc/passwd&quot;&gt;</span><br><span class="line">]&gt;</span><br><span class="line">&lt;profile&gt;</span><br><span class="line">    &lt;username&gt;&amp;leak;&lt;/username&gt;</span><br><span class="line">    &lt;role&gt;developer&lt;/role&gt;</span><br><span class="line">&lt;/profile&gt;</span><br><span class="line"></span><br><span class="line">后端核心业务代码片段（以 PHP 为例）：</span><br><span class="line">&lt;?php</span><br><span class="line">// 后端接收原始 XML 输入并进行解析</span><br><span class="line">$xml_data = file_get_contents(&#x27;php://input&#x27;);</span><br><span class="line">$dom = new DOMDocument();</span><br><span class="line">// 默认不安全配置：开启外部实体解析</span><br><span class="line">$dom-&gt;loadXML($xml_data);</span><br><span class="line"></span><br><span class="line">// 提取 username 标签内容并直接输出给用户</span><br><span class="line">$username = $dom-&gt;getElementsByTagName(&#x27;username&#x27;)-&gt;item(0)-&gt;nodeValue;</span><br><span class="line">echo &quot;欢迎用户: &quot; . htmlspecialchars($username);</span><br><span class="line">?&gt;</span><br><span class="line"></span><br><span class="line">服务端返回给客户端的 HTTP 响应报文：</span><br><span class="line">HTTP/1.1 200 OK</span><br><span class="line">Content-Type: text/html; charset=UTF-8</span><br><span class="line"></span><br><span class="line">欢迎用户: root:x:0:0:root:/root:/bin/bash</span><br><span class="line">daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin</span><br><span class="line">bin:x:2:2:bin:/bin:/usr/sbin/nologin</span><br><span class="line">sys:x:3:3:sys:/dev:/usr/sbin/nologin</span><br><span class="line">www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin</span><br></pre></td></tr></table></figure>
+
+<p><strong>执行链条闭环</strong>：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1. 外部实体leak指示解析器读取系统物理文件/etc/passwd；</span><br><span class="line">2. 实体引用&amp;leak;被解析器查表替换为文件全部文本；</span><br><span class="line">3. 后端业务逻辑直接获取该节点的nodeValue并打印回前端响应；</span><br><span class="line">4. 攻击者无需具备系统登录权限，直接在网页响应中读取到了操作系统的敏感用户清单。</span><br></pre></td></tr></table></figure>
+
+<p>扩展</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">编码</span><br><span class="line">	Base64编码（无密钥）：不是加密，只是换了一种字符格式方便输出，任何人无需密钥就能一键还原</span><br><span class="line">哈希</span><br><span class="line">	SHA-256（无密钥）：单向提取数字指纹，不管输入的是几个字还是一部电影，输出长度永远固定，且绝对不可逆（无法解密）</span><br><span class="line">加密</span><br><span class="line">	AES对称加密（必有密钥key）：真正加密。密钥密钥的人看到一堆乱码，持有正确密钥的人可以无损解密还原</span><br><span class="line">	</span><br><span class="line">对称密码：加密和解密使用同一把密钥。就像给一个带密码的压缩包设了密码Key_8899，你用这个密码缩上文件，接收方也必须输入同一个密码Key_8899才能解压打开</span><br><span class="line">	主流代表算法：AES（国际标准）、ChaCha20（移动端）、SM4（国家商用密码标准）</span><br><span class="line">	最大优势：速度极快。非常适合加密大文件、数据库字段或高清视频流</span><br><span class="line">	</span><br><span class="line">非对称加密：不在使用单把密钥。而是生成一堆在数学上互相绑定的密钥：公钥和私钥</span><br><span class="line">	公钥：完全公开，可以随便发给任何人</span><br><span class="line">	私钥：严格保密，只有生成它的主人自己保存在服务器或硬件里，绝不通过网络传输</span><br><span class="line">	</span><br><span class="line">模式一：公钥加密，私钥解密（加解密，保机密）</span><br><span class="line">	适用场景：别人发给你机密数据，只允许你一个人看</span><br><span class="line">	流程：服务器把公钥公开网络上，客户端拿这个公钥把机密数据机密成密文发出去</span><br><span class="line">	安全性：数据一旦被公钥加密，连机密者自己和截获公钥的黑客也解不开。全世界只有持有私钥的服务器能够解密还原</span><br><span class="line"></span><br><span class="line">模式二：私钥签名，公钥验签（防伪造/防篡改）</span><br><span class="line">	适用场景：想全网发布信息或软件包，证明“确实是我发的，且没被改过”</span><br><span class="line">	流程：发布者先对文件算一个哈希指纹，在用自己独有的私钥对指纹计算生成一段数字签名</span><br><span class="line">	安全性：任何人收到文件后，用发布者公开的公钥验证签名。验证通过即证明：文件一定是私钥持有人签发，且中途未被篡改</span><br><span class="line">	</span><br><span class="line">SSH登录密钥为模式二</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/web%E5%AE%89%E5%85%A8/" rel="tag"># web安全</a>
+              <a href="/tags/XXE%E6%B3%A8%E5%85%A5/" rel="tag"># XXE注入</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2026/09/02/%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%AF%B7%E6%B1%82%E4%BC%AA%E9%80%A0/" rel="prev" title="服务端请求伪造">
+                  <i class="fa fa-angle-left"></i> 服务端请求伪造
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2026/10/20/XSS%E8%B7%A8%E7%AB%99%E8%84%9A%E6%9C%AC%E6%94%BB%E5%87%BB/" rel="next" title="XSS跨站脚本攻击">
+                  XSS跨站脚本攻击 <i class="fa fa-angle-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+  <div class="copyright">
+    &copy; 
+    <span itemprop="copyrightYear">2026</span>
+    <span class="with-love">
+      <i class="fa fa-heart"></i>
+    </span>
+    <span class="author" itemprop="copyrightHolder">X</span>
+  </div>
+<!--
+  <div class="powered-by">由 <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/muse/" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+  </div>
+-->
+
+    </div>
+  </footer>
+
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"log":false,"model":{"jsonPath":"/live2dw/assets/wanko.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true}});</script></body>
+</html>
